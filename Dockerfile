@@ -8,7 +8,10 @@ WORKDIR /app
 COPY package.json package-lock.json* ./
 
 # Install dependencies (including dev dependencies for build)
-RUN npm ci
+# Clear npm cache and install to fix Alpine Linux rollup issues
+RUN npm cache clean --force && \
+    rm -rf node_modules package-lock.json && \
+    npm install
 
 # Copy source code
 COPY . .
