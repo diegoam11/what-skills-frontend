@@ -1,31 +1,40 @@
-import React from 'react';
+import { RefreshCw, Plus, } from "lucide-react";
+import { useDashboardLogic } from "./DashboardLogic";
+import { EmployabilityChart } from "../../components/EmployabilityChart";
+import { ProfileCompletionCard } from "../../components/ProfileCompletionCard";
+import { SkillsHighlightsCard } from "../../components/SkillsHighlightsCard";
+import { ImprovementGapsCard } from "../../components/ImprovementGapsCard";
 
-export const DashboardView = () => {
-    return (
-        <div className="min-h-screen bg-gray-50 p-8">
-            <div className="max-w-4xl mx-auto">
-                <header className="mb-8">
-                    <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-                    <p className="text-gray-600 mt-2">Gestión de perfiles profesionales</p>
-                </header>
+export const DashboardView: React.FC = () => {
+  const { employability, profileCompletion, skills, improvements } =
+    useDashboardLogic();
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <div className="bg-white p-6 rounded-lg shadow-md">
-                        <h2 className="text-xl font-semibold mb-4">Mi Perfil</h2>
-                        <p className="text-gray-600">Gestiona tu información profesional</p>
-                    </div>
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-end gap-[1rem]">
+        <button className="flex items-center gap-1.5 bg-white text-gray-800 font-[500] px-3 py-1.5 rounded-xl hover:bg-gray-300 transition border-2 border-[#E8F5E9]">
+          <RefreshCw size={20} /> <span className="text-sm">Actualizar</span>
+        </button>
 
-                    <div className="bg-white p-6 rounded-lg shadow-md">
-                        <h2 className="text-xl font-semibold mb-4">Habilidades</h2>
-                        <p className="text-gray-600">Administra tus skills técnicos</p>
-                    </div>
+        <button className="flex items-center gap-1.5 bg-[#0FBB82] text-white px-3 py-1.5 text-[80%] font-[600] rounded-xl hover:bg-green-700 transition">
+          <Plus size={20} /> <span className="text-sm">Agregar habilidad</span>
+        </button>
+      </div>
+      <h1 className="text-2xl font-semibold text-gray-800">
+        Dashboard inicial
+      </h1>
 
-                    <div className="bg-white p-6 rounded-lg shadow-md">
-                        <h2 className="text-xl font-semibold mb-4">Proyectos</h2>
-                        <p className="text-gray-600">Muestra tu portafolio</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
+      {/* Fila superior */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <EmployabilityChart {...employability} />
+        <ProfileCompletionCard {...profileCompletion} />
+      </div>
+
+      {/* Fila inferior */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <SkillsHighlightsCard skills={skills} />
+        <ImprovementGapsCard improvements={improvements} />
+      </div>
+    </div>
+  );
 };

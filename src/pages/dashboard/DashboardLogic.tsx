@@ -1,32 +1,39 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
-export const DashboardLogic = () => {
-  const [employabilityIndex, setEmployabilityIndex] = useState<number>(0);
-  const [highlightedSkills, setHighlightedSkills] = useState<string[]>([]);
-  const [skillsToImprove, setSkillsToImprove] = useState<string[]>([]);
+export const useDashboardLogic = () => {
+  const [employability] = useState({
+    score: 78,
+    level: "Bueno",
+    marketFit: 82,
+    profileDemand: 75,
+    recommendations: 4,
+  });
 
-  useEffect(() => {
-    // Simulación temporal — luego se reemplazará por datos del backend o IA
-    setTimeout(() => {
-      setEmployabilityIndex(74);
-      setHighlightedSkills([
-        "Python",
-        "React",
-        "Machine Learning",
-        "SQL",
-        "Git",
-      ]);
-      setSkillsToImprove([
-        "Data Engineering",
-        "Cloud Deployment (AWS/GCP)",
-        "CI/CD Pipelines",
-      ]);
-    }, 800);
-  }, []);
+  const [profileCompletion] = useState({
+    progress: 70,
+    sections: [
+      { label: "Añade tu formación", completed: false },
+      { label: "Experiencia laboral", completed: false },
+      { label: "Idiomas", completed: false },
+    ],
+  });
+
+  const [skills] = useState([
+    { name: "Python", level: "Senior", tag: "Alta demanda" },
+    { name: "SQL", level: "Avanzado", tag: "Fuerte" },
+    { name: "Comunicación", level: "Avanzado", tag: "Valorado" },
+  ]);
+
+  const [improvements] = useState([
+    { name: "Cloud", level: "Intermedio", tag: "Reforzar" },
+    { name: "Arquitectura", level: "Básico", tag: "Prioridad" },
+    { name: "Inglés", level: "B2", tag: "Certificar" },
+  ]);
 
   return {
-    employabilityIndex,
-    highlightedSkills,
-    skillsToImprove,
+    employability,
+    profileCompletion,
+    skills,
+    improvements,
   };
 };
