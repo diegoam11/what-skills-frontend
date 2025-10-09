@@ -1,4 +1,4 @@
-/*import { initializeApp } from 'firebase/app';
+import { initializeApp } from 'firebase/app';
 import {
     getAuth,
     signInWithPopup,
@@ -101,4 +101,3 @@ class AuthService {
 }
 
 export const authService = new AuthService();
-*/
