@@ -1,12 +1,21 @@
 import React from "react";
 import { DashboardLogic } from "./DashboardLogic";
+import { Plus, RefreshCw } from "lucide-react";
 
 export const DashboardView: React.FC = () => {
   const { employabilityIndex, skillsToImprove, highlightedSkills } =
     DashboardLogic();
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
+    <div className="min-h-screen bg-[#F2FEF7] p-8 pt-0">
+      <div className="flex justify-end gap-[1rem] mt-0 pt-0">
+        <button className="flex items-center gap-2 bg-white text-gray-800 font-[500] px-3 py-1.5 rounded-xl hover:bg-gray-300 transition border-2 border-[#E8F5E9]">
+          <RefreshCw size={16} /> Actualizar
+        </button>
+        <button className="flex items-center gap-2 bg-[#0FBB82] text-white px-3 py-1.5 text-[80%] font-[600] rounded-xl hover:bg-green-700 transition">
+          <Plus size={16} /> Agregar habilidad
+        </button>
+      </div>
       <h1 className="text-3xl font-semibold mb-6 text-gray-800">
         Panel de Empleabilidad
       </h1>
