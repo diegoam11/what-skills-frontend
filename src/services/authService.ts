@@ -1,4 +1,4 @@
-import { initializeApp } from 'firebase/app';
+/*import { initializeApp } from 'firebase/app';
 import {
     getAuth,
     signInWithPopup,
@@ -7,7 +7,7 @@ import {
     createUserWithEmailAndPassword,
     signOut,
     onAuthStateChanged,
-    User as FirebaseUser
+    type User as FirebaseUser
 } from 'firebase/auth';
 
 const firebaseConfig = {
@@ -101,3 +101,4 @@ class AuthService {
 }
 
 export const authService = new AuthService();
+*/
