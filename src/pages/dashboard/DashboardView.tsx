@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 import { User, TrendingUp, Award, Target, BookOpen, Users } from 'lucide-react';
 
 interface EmployabilityScore {

@@ -1,4 +1,5 @@
-import { authAPI, LoginRequest, RegisterRequest, User, AuthResponse } from '../api/endpoints';
+import { authAPI } from '../api/endpoints';
+import type { LoginRequest, RegisterRequest, User, AuthResponse } from '../api/endpoints';
 
 class AuthService {
   private tokenKey = 'userToken';
