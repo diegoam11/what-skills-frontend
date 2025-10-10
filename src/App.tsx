@@ -34,6 +34,11 @@ function App() {
                     path="/dashboard"
                     element={isAuthenticated ? <DashboardView /> : <Navigate to="/login" />}
                 />
+                
+                <Route 
+                    path="*" 
+                    element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} />}
+                />
             </Routes>
         </Router>
     );
