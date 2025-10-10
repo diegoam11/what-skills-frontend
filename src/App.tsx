@@ -8,16 +8,21 @@ import {
 import { DashboardView } from "./pages/dashboard/DashboardView";
 import { LoginView } from "./pages/login/LoginView";
 import { RegisterView } from "./pages/register/RegisterView";
+import { JobsView } from "./pages/jobs/JobsView";
+import { SkillsView } from "./pages/skills/SkillsView";
+import { ProfileView } from "./pages/profile/ProfileView";
+import { GoalsView } from "./pages/goals/GoalsView";
+import { LearningView } from "./pages/learning/LearningView";
 import { RouterLayout } from "./common/RouterLayout";
+import authService from './services/authService';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Verificar sesión activa
-    const token = localStorage.getItem("userToken");
-    setIsAuthenticated(!!token);
+    // Verificar sesión activa usando authService
+    setIsAuthenticated(authService.isAuthenticated());
     setLoading(false);
   }, []);
 
@@ -59,6 +64,11 @@ function App() {
         {isAuthenticated && (
           <Route element={<RouterLayout />}>
             <Route path="/dashboard" element={<DashboardView />} />
+            <Route path="/jobs" element={<JobsView />} />
+            <Route path="/skills" element={<SkillsView />} />
+            <Route path="/profile" element={<ProfileView />} />
+            <Route path="/goals" element={<GoalsView />} /> {/* La ruta en tu sidebar era /users, la cambiamos a /goals para que sea más clara */}
+            <Route path="/learning" element={<LearningView />} />
           </Route>
         )}
 

@@ -16,7 +16,7 @@ export const sidebarData: { section: string; items: SidebarItemDef[] }[] = [
   {
     section: "Recursos",
     items: [
-      { path: "/users", label: "Objetivos", icon: <CircleDot size={20} /> },
+      { path: "/goals", label: "Objetivos", icon: <CircleDot size={20} /> },
       { path: "/learning", label: "Aprendizaje", icon: <BookOpen size={20} /> },
     ],
   },
