@@ -1,24 +1,52 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+import authService from '../../services/authService';
 
 export const LoginView: React.FC = () => {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
+    const [formData, setFormData] = useState({
+        email: '',
+        password: ''
+    });
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState('');
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setFormData({
+            ...formData,
+            [e.target.name]: e.target.value
+        });
+        // Clear error when user starts typing
+        if (error) setError('');
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        console.log('Login:', { email, password });
-        // Simulación de login exitoso - redirigir al dashboard
-        window.location.href = '/dashboard';
+        setIsLoading(true);
+        setError('');
+
+        try {
+            await authService.login(formData);
+            // Redirect will happen automatically due to App.tsx logic
+            window.location.href = '/dashboard';
+        } catch (error: any) {
+            console.error('Login error:', error);
+            setError(error.response?.data?.detail || 'Error de inicio de sesión. Verifica tus credenciales.');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const handleGoogleLogin = () => {
         console.log('Google login clicked');
-        // Por ahora solo simular login exitoso
+        // TODO: Implement Google OAuth
+        // For now, simulate login with demo data
+        localStorage.setItem('userToken', 'demo-token');
         window.location.href = '/dashboard';
     };
 
     const handleLinkedInLogin = () => {
         console.log('LinkedIn login clicked');
+        // TODO: Implement LinkedIn OAuth
     };
 
     return (
@@ -38,6 +66,13 @@ export const LoginView: React.FC = () => {
                 <h1 className="text-2xl font-bold text-center text-gray-800">
                     Iniciar Sesión
                 </h1>
+
+                {/* Error Message */}
+                {error && (
+                    <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                        {error}
+                    </div>
+                )}
 
                 {/* OAuth Buttons */}
                 <div className="space-y-3">
@@ -74,9 +109,9 @@ export const LoginView: React.FC = () => {
                         <div className="w-full border-t border-gray-300" />
                     </div>
                     <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-white text-gray-500">
-              O continuar con email
-            </span>
+                        <span className="px-2 bg-white text-gray-500">
+                            O continuar con email
+                        </span>
                     </div>
                 </div>
 
@@ -87,10 +122,12 @@ export const LoginView: React.FC = () => {
                     </label>
                     <input
                         type="email"
+                        name="email"
                         className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        value={formData.email}
+                        onChange={handleChange}
                         required
+                        placeholder="tu@email.com"
                     />
                 </div>
 
@@ -101,27 +138,32 @@ export const LoginView: React.FC = () => {
                     </label>
                     <input
                         type="password"
+                        name="password"
                         className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
+                        value={formData.password}
+                        onChange={handleChange}
                         required
+                        placeholder="••••••••"
                     />
                 </div>
 
-                {/* Button */}
+                {/* Submit Button */}
                 <button
                     type="submit"
-                    className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors cursor-pointer"
+                    disabled={isLoading}
+                    className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                    Iniciar Sesión
+                    {isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
                 </button>
 
-                <a
-                    href="/register"
-                    className="mt-3 block text-center text-sm text-blue-600 hover:text-blue-800 transition-colors"
-                >
-                    ¿No tienes una cuenta? Regístrate
-                </a>
+                <div className="text-center">
+                    <p className="text-sm text-gray-600">
+                        ¿No tienes una cuenta?{' '}
+                        <Link to="/register" className="font-medium text-blue-600 hover:text-blue-500">
+                            Regístrate
+                        </Link>
+                    </p>
+                </div>
             </form>
         </div>
     );

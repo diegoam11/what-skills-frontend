@@ -1,103 +1,90 @@
-import { initializeApp } from 'firebase/app';
-import {
-    getAuth,
-    signInWithPopup,
-    GoogleAuthProvider,
-    signInWithEmailAndPassword,
-    createUserWithEmailAndPassword,
-    signOut,
-    onAuthStateChanged,
-    type User as FirebaseUser
-} from 'firebase/auth';
-
-const firebaseConfig = {
-    apiKey: "AIzaSyDvQSuybE7XPSgZJsAr4jlAorhfIfbYLtU",
-    authDomain: "whatskills-database.firebaseapp.com",
-    projectId: "whatskills-database",
-    storageBucket: "whatskills-database.firebasestorage.app",
-    messagingSenderId: "851279343659",
-    appId: "1:851279343659:web:11574f5152f8e93eec3fda"
-};
-
-const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
-
-export interface User {
-    uid: string;
-    email: string | null;
-    displayName: string | null;
-    photoURL: string | null;
-}
+import { authAPI } from '../api/endpoints';
+import type { LoginRequest, RegisterRequest, User, AuthResponse } from '../api/endpoints';
 
 class AuthService {
-    private googleProvider: GoogleAuthProvider;
+  private tokenKey = 'userToken';
+  private userKey = 'userData';
 
-    constructor() {
-        this.googleProvider = new GoogleAuthProvider();
-    }
+  // Check if user is authenticated
+  isAuthenticated(): boolean {
+    return !!localStorage.getItem(this.tokenKey);
+  }
 
-    async signInWithGoogle(): Promise<User> {
-        try {
-            const result = await signInWithPopup(auth, this.googleProvider);
-            return this.formatUser(result.user);
-        } catch (error) {
-            console.error('Error en login con Google:', error);
-            throw error;
-        }
-    }
+  // Get stored token
+  getToken(): string | null {
+    return localStorage.getItem(this.tokenKey);
+  }
 
-    async signInWithEmail(email: string, password: string): Promise<User> {
-        try {
-            const result = await signInWithEmailAndPassword(auth, email, password);
-            return this.formatUser(result.user);
-        } catch (error) {
-            console.error('Error en login con email:', error);
-            throw error;
-        }
-    }
+  // Get stored user data
+  getUser(): User | null {
+    const userData = localStorage.getItem(this.userKey);
+    return userData ? JSON.parse(userData) : null;
+  }
 
-    async signUpWithEmail(email: string, password: string): Promise<User> {
-        try {
-            const result = await createUserWithEmailAndPassword(auth, email, password);
-            return this.formatUser(result.user);
-        } catch (error) {
-            console.error('Error en registro con email:', error);
-            throw error;
-        }
+  // Login user
+  async login(credentials: LoginRequest): Promise<User> {
+    try {
+      // Get auth token
+      const authResponse: AuthResponse = await authAPI.login(credentials);
+      
+      // Store token
+      localStorage.setItem(this.tokenKey, authResponse.access_token);
+      
+      // Get user data
+      const user = await authAPI.getCurrentUser();
+      
+      // Store user data
+      localStorage.setItem(this.userKey, JSON.stringify(user));
+      
+      return user;
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error;
     }
+  }
 
-    async signOut(): Promise<void> {
-        try {
-            await signOut(auth);
-        } catch (error) {
-            console.error('Error al cerrar sesión:', error);
-            throw error;
-        }
+  // Register user
+  async register(userData: RegisterRequest): Promise<User> {
+    try {
+      const user = await authAPI.register(userData);
+      
+      // Auto-login after registration
+      await this.login({
+        email: userData.email,
+        password: userData.password
+      });
+      
+      return user;
+    } catch (error) {
+      console.error('Registration error:', error);
+      throw error;
     }
+  }
 
-    onAuthStateChanged(callback: (user: User | null) => void) {
-        return onAuthStateChanged(auth, (firebaseUser) => {
-            if (firebaseUser) {
-                callback(this.formatUser(firebaseUser));
-            } else {
-                callback(null);
-            }
-        });
-    }
+  // Logout user
+  logout(): void {
+    localStorage.removeItem(this.tokenKey);
+    localStorage.removeItem(this.userKey);
+    window.location.href = '/login';
+  }
 
-    getCurrentUser(): User | null {
-        const firebaseUser = auth.currentUser;
-        return firebaseUser ? this.formatUser(firebaseUser) : null;
+  // Refresh user data
+  async refreshUser(): Promise<User | null> {
+    try {
+      if (!this.isAuthenticated()) {
+        return null;
+      }
+      
+      const user = await authAPI.getCurrentUser();
+      localStorage.setItem(this.userKey, JSON.stringify(user));
+      return user;
+    } catch (error) {
+      console.error('Error refreshing user data:', error);
+      this.logout();
+      return null;
     }
-
-    private formatUser(firebaseUser: FirebaseUser): User {
-        return {
-            uid: firebaseUser.uid,
-            email: firebaseUser.email,
-            displayName: firebaseUser.displayName,
-            photoURL: firebaseUser.photoURL,
-        };
-    }
+  }
 }
 
 export const authService = new AuthService();
+export default authService;
