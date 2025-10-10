@@ -28,6 +28,7 @@ export const LoginView: React.FC = () => {
             await authService.login(formData);
             // Redirect will happen automatically due to App.tsx logic
             window.location.href = '/dashboard';
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
             console.error('Login error:', error);
             setError(error.response?.data?.detail || 'Error de inicio de sesión. Verifica tus credenciales.');
