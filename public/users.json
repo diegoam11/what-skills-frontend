@@ -1,0 +1,58 @@
+{
+  "users": [
+    {
+      "id": "1",
+      "email": "admin@whatskills.com",
+      "password": "123456",
+      "career": "sistemas",
+      "job": "fullstack",
+      "displayName": "Admin WhatSkills",
+      "createdAt": "2025-10-01T10:00:00Z"
+    },
+    {
+      "id": "2",
+      "email": "demo@unmsm.edu.pe",
+      "password": "demo123",
+      "career": "industrial",
+      "job": "pm",
+      "displayName": "Usuario Demo",
+      "createdAt": "2025-10-05T14:30:00Z"
+    },
+    {
+      "id": "3",
+      "email": "estudiante@unmsm.edu.pe",
+      "password": "123456",
+      "career": "sistemas",
+      "job": "backend",
+      "displayName": "Juan Pérez",
+      "createdAt": "2025-10-08T09:15:00Z"
+    },
+    {
+      "id": "4",
+      "email": "maria.garcia@unmsm.edu.pe",
+      "password": "123456",
+      "career": "administracion",
+      "job": "analista",
+      "displayName": "María García",
+      "createdAt": "2025-10-09T11:20:00Z"
+    },
+    {
+      "id": "5",
+      "email": "carlos.lopez@unmsm.edu.pe",
+      "password": "123456",
+      "career": "economia",
+      "job": "frontend",
+      "displayName": "Carlos López",
+      "createdAt": "2025-10-10T08:45:00Z"
+    },
+    {
+      "id": "6",
+      "email": "ana.torres@unmsm.edu.pe",
+      "password": "demo123",
+      "career": "derecho",
+      "job": "qa",
+      "displayName": "Ana Torres",
+      "createdAt": "2025-10-10T15:30:00Z"
+    }
+  ]
+}

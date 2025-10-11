@@ -1,48 +1,21 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
-import authService from '../../services/authService';
+import { useLoginLogic } from './LoginLogic';
 
 export const LoginView: React.FC = () => {
-    const [formData, setFormData] = useState({
-        email: '',
-        password: ''
-    });
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState('');
-
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setFormData({
-            ...formData,
-            [e.target.name]: e.target.value
-        });
-        // Clear error when user starts typing
-        if (error) setError('');
-    };
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsLoading(true);
-        setError('');
-
-        try {
-            await authService.login(formData);
-            // Redirect will happen automatically due to App.tsx logic
-            window.location.href = '/dashboard';
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } catch (error: any) {
-            console.error('Login error:', error);
-            setError(error.response?.data?.detail || 'Error de inicio de sesión. Verifica tus credenciales.');
-        } finally {
-            setIsLoading(false);
-        }
-    };
+    const {
+        email,
+        setEmail,
+        password,
+        setPassword,
+        loading,
+        error,
+        handleSubmit
+    } = useLoginLogic();
 
     const handleGoogleLogin = () => {
         console.log('Google login clicked');
         // TODO: Implement Google OAuth
-        // For now, simulate login with demo data
-        localStorage.setItem('userToken', 'demo-token');
-        window.location.href = '/dashboard';
     };
 
     const handleLinkedInLogin = () => {
@@ -125,8 +98,9 @@ export const LoginView: React.FC = () => {
                         type="email"
                         name="email"
                         className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0FBB82] focus:outline-none"
-                        value={formData.email}
-                        onChange={handleChange}
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        disabled={loading}
                         required
                         placeholder="tu@email.com"
                     />
@@ -141,8 +115,9 @@ export const LoginView: React.FC = () => {
                         type="password"
                         name="password"
                         className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0FBB82] focus:outline-none"
-                        value={formData.password}
-                        onChange={handleChange}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        disabled={loading}
                         required
                         placeholder="••••••••"
                     />
@@ -151,10 +126,10 @@ export const LoginView: React.FC = () => {
                 {/* Submit Button */}
                 <button
                     type="submit"
-                    disabled={isLoading}
+                    disabled={loading}
                     className="w-full bg-[#0FBB82] text-white py-2 rounded-lg hover:bg-[#0FAE7D] transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                    {isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
+                    {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
                 </button>
 
                 <div className="text-center">

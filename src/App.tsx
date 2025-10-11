@@ -13,7 +13,7 @@ import { SkillsView } from "./pages/skills/SkillsView";
 import { GoalsView } from "./pages/goals/GoalsView";
 import { LearningView } from "./pages/learning/LearningView";
 import { RouterLayout } from "./common/RouterLayout";
-import authService from "./services/authService";
+import { mockAuthService } from "./services/mockAuthService";
 import { UserProfileView } from "./pages/user-profile/UserProfileView";
 
 function App() {
@@ -21,8 +21,8 @@ function App() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Verificar sesión activa usando authService
-    setIsAuthenticated(authService.isAuthenticated());
+    // Verificar sesión activa usando mockAuthService
+    setIsAuthenticated(mockAuthService.isAuthenticated());
     setLoading(false);
   }, []);
 
