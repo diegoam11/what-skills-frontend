@@ -89,7 +89,7 @@ export const RegisterView: React.FC = () => {
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <div className="flex justify-center items-center">
-            <div className="h-16 w-16 bg-blue-600 rounded-md flex items-center justify-center">
+            <div className="h-16 w-16 bg-[#0FBB82] rounded-md flex items-center justify-center">
               <span className="text-white font-bold text-xl">WS</span>
             </div>
             <h1 className="ml-2 text-xl font-bold">What skills?</h1>
@@ -116,7 +116,7 @@ export const RegisterView: React.FC = () => {
                   type="text"
                   value={formData.first_name}
                   onChange={handleChange}
-                  className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none"
+                  className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0FBB82] focus:border-[#0FBB82] focus:outline-none"
                   placeholder="Juan"
                 />
                 {errors.first_name && (
@@ -134,7 +134,7 @@ export const RegisterView: React.FC = () => {
                   type="text"
                   value={formData.last_name}
                   onChange={handleChange}
-                  className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none"
+                  className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0FBB82] focus:border-[#0FBB82] focus:outline-none"
                   placeholder="Pérez"
                 />
                 {errors.last_name && (
@@ -154,7 +154,7 @@ export const RegisterView: React.FC = () => {
                 type="email"
                 value={formData.email}
                 onChange={handleChange}
-                className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none"
+                className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0FBB82] focus:border-[#0FBB82] focus:outline-none"
                 placeholder="juan.perez@example.com"
               />
               {errors.email && (
@@ -174,7 +174,7 @@ export const RegisterView: React.FC = () => {
                   type="password"
                   value={formData.password}
                   onChange={handleChange}
-                  className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none"
+                  className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0FBB82] focus:border-[#0FBB82] focus:outline-none"
                   placeholder="••••••••"
                 />
                 {errors.password && (
@@ -192,7 +192,7 @@ export const RegisterView: React.FC = () => {
                   type="password"
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none"
+                  className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0FBB82] focus:border-[#0FBB82] focus:outline-none"
                   placeholder="••••••••"
                 />
                 {errors.confirmPassword && (
@@ -212,7 +212,7 @@ export const RegisterView: React.FC = () => {
                 type="text"
                 value={formData.university}
                 onChange={handleChange}
-                className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none"
+                className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0FBB82] focus:border-[#0FBB82] focus:outline-none"
                 placeholder="Universidad Nacional Mayor de San Marcos"
               />
               {errors.university && (
@@ -230,7 +230,7 @@ export const RegisterView: React.FC = () => {
                 type="text"
                 value={formData.career}
                 onChange={handleChange}
-                className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none"
+                className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0FBB82] focus:border-[#0FBB82] focus:outline-none"
                 placeholder="Ingeniería de Sistemas"
               />
               {errors.career && (
@@ -247,7 +247,7 @@ export const RegisterView: React.FC = () => {
                 name="semester"
                 value={formData.semester}
                 onChange={handleChange}
-                className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none"
+                className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0FBB82] focus:border-[#0FBB82] focus:outline-none"
               >
                 {Array.from({ length: 12 }, (_, i) => i + 1).map(num => (
                   <option key={num} value={num}>
@@ -262,7 +262,7 @@ export const RegisterView: React.FC = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-[#0FBB82] hover:bg-[#0FAE7D] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0FBB82] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? 'Creando cuenta...' : 'Crear cuenta'}
             </button>
@@ -271,7 +271,7 @@ export const RegisterView: React.FC = () => {
           <div className="text-center">
             <p className="text-sm text-gray-600">
               ¿Ya tienes una cuenta?{' '}
-              <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500">
+              <Link to="/login" className="font-medium text-[#0FBB82] hover:text-[#0FAE7D]">
                 Inicia sesión
               </Link>
             </p>

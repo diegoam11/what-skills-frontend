@@ -58,7 +58,7 @@ export const LoginView: React.FC = () => {
             >
                 {/* Logo */}
                 <div className="flex justify-center items-center">
-                    <div className="h-16 w-16 bg-blue-600 rounded-md flex items-center justify-center">
+                    <div className="h-16 w-16 bg-[#0FBB82] rounded-md flex items-center justify-center">
                         <span className="text-white font-bold text-xl">WS</span>
                     </div>
                     <h1 className="ml-2 text-xl font-bold">What skills?</h1>
@@ -124,7 +124,7 @@ export const LoginView: React.FC = () => {
                     <input
                         type="email"
                         name="email"
-                        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0FBB82] focus:outline-none"
                         value={formData.email}
                         onChange={handleChange}
                         required
@@ -140,7 +140,7 @@ export const LoginView: React.FC = () => {
                     <input
                         type="password"
                         name="password"
-                        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0FBB82] focus:outline-none"
                         value={formData.password}
                         onChange={handleChange}
                         required
@@ -152,7 +152,7 @@ export const LoginView: React.FC = () => {
                 <button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full bg-[#0FBB82] text-white py-2 rounded-lg hover:bg-[#0FAE7D] transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     {isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
                 </button>
@@ -160,7 +160,7 @@ export const LoginView: React.FC = () => {
                 <div className="text-center">
                     <p className="text-sm text-gray-600">
                         ¿No tienes una cuenta?{' '}
-                        <Link to="/register" className="font-medium text-blue-600 hover:text-blue-500">
+                        <Link to="/register" className="font-medium text-[#0FBB82] hover:text-[#0FAE7D]">
                             Regístrate
                         </Link>
                     </p>
