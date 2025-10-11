@@ -1,76 +1,110 @@
-import { useState } from 'react';
-import { SearchableSelect } from './SearchableSelect';
+import { useState } from "react";
+import { SearchableSelect } from "./SearchableSelect";
+import { Select } from "./Select";
+import type { SkillCategory } from "../Skills/SkillsLogic"; // Asumiendo la ruta
 
-// Datos de ejemplo.
-const allSkills = [
-  { value: 'javascript', label: 'JavaScript' },
-  { value: 'typescript', label: 'TypeScript' },
-  { value: 'python', label: 'Python' },
-  { value: 'java', label: 'Java' },
-  { value: 'rust', label: 'Rust' },
-  { value: 'docker', label: 'Docker' },
-  { value: 'kubernetes', label: 'Kubernetes' },
-  { value: 'aws', label: 'AWS' },
+// CAMBIO 1: Separamos las habilidades en dos listas distintas.
+const technicalSkills = [
+  { value: "javascript", label: "JavaScript" },
+  { value: "typescript", label: "TypeScript" },
+  { value: "python", label: "Python" },
+  { value: "java", label: "Java" },
+  { value: "rust", label: "Rust" },
+  { value: "docker", label: "Docker" },
+  { value: "kubernetes", label: "Kubernetes" },
+  { value: "aws", label: "AWS" },
+];
+
+const softSkills = [
+  { value: "comunicacion", label: "Comunicación" },
+  { value: "trabajo_en_equipo", label: "Trabajo en Equipo" },
+  { value: "resolucion_de_problemas", label: "Resolución de Problemas" },
+  { value: "liderazgo", label: "Liderazgo" },
+  { value: "pensamiento_critico", label: "Pensamiento Crítico" },
 ];
 
 const proficiencyLevels = [
-    { value: 'basico', label: 'Básico' },
-    { value: 'intermedio', label: 'Intermedio' },
-    { value: 'avanzado', label: 'Avanzado' },
+  { value: "basico", label: "Básico" },
+  { value: "intermedio", label: "Intermedio" },
+  { value: "avanzado", label: "Avanzado" },
 ];
 
 interface AddSkillFormProps {
   onSkillAdd: (skill: { name: string; proficiency: string }) => void;
   onClose: () => void;
+  // CAMBIO 2: Añadimos la categoría como una prop requerida.
+  category: SkillCategory;
 }
 
-export const AddSkillForm: React.FC<AddSkillFormProps> = ({ onSkillAdd, onClose }) => {
-  const [skillName, setSkillName] = useState('');
-  const [proficiency, setProficiency] = useState('basico');
-  const [error, setError] = useState('');
+export const AddSkillForm: React.FC<AddSkillFormProps> = ({
+  onSkillAdd,
+  onClose,
+  category, // Usamos la nueva prop
+}) => {
+  const [proficiency, setProficiency] = useState("");
+  const [skillName, setSkillName] = useState("");
+  const [error, setError] = useState("");
+
+  // CAMBIO 3: Determinamos qué lista de habilidades mostrar
+  // basado en la categoría que recibimos como prop.
+  const availableSkills =
+    category === "Técnicas" ? technicalSkills : softSkills;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!skillName) {
-      setError('Por favor, selecciona una habilidad.');
+      setError("Por favor, selecciona una habilidad.");
       return;
     }
-    // Llama a la función del padre para manejar la lógica de añadir
+    if (!proficiency) {
+      setError("Por favor, selecciona un nivel de dominio.");
+      return;
+    }
     onSkillAdd({ name: skillName, proficiency });
-    onClose(); // Cierra el modal después de añadir
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-6">
       <SearchableSelect
         label="Habilidad"
-        options={allSkills}
+        // CAMBIO 4: Usamos la lista de habilidades filtrada.
+        options={availableSkills}
         value={skillName}
-        onChange={setSkillName}
-        placeholder="Ej: Python, Docker..."
+        onChange={(value) => {
+          setSkillName(value);
+          if (error) setError("");
+        }}
+        placeholder={`Ej: ${
+          category === "Técnicas" ? "Python" : "Liderazgo"
+        }...`}
       />
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Nivel de dominio</label>
-        <select
-          value={proficiency}
-          onChange={(e) => setProficiency(e.target.value)}
-          className="w-full p-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm"
-        >
-          {proficiencyLevels.map(level => (
-            <option key={level.value} value={level.value}>{level.label}</option>
-          ))}
-        </select>
-      </div>
+      <Select
+        label="Nivel de dominio"
+        options={proficiencyLevels}
+        value={proficiency}
+        onChange={(value) => {
+          setProficiency(value);
+          if (error) setError("");
+        }}
+        placeholder="Selecciona un nivel..."
+      />
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-red-600 -my-2">{error}</p>}
 
       <div className="flex justify-end gap-3 pt-4">
-        <button type="button" onClick={onClose} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
+        <button
+          type="button"
+          onClick={onClose}
+          className="px-4 py-2 bg-gray-200 text-gray-800 font-semibold rounded-xl hover:bg-gray-300 transition-colors cursor-pointer"
+        >
           Cancelar
         </button>
-        <button type="submit" className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
-          Agregar Habilidad
+        <button
+          type="submit"
+          className="px-4 py-2 bg-[#0FBB82] text-white font-semibold rounded-xl hover:bg-green-700 transition-colors shadow-sm cursor-pointer"
+        >
+          Agregar
         </button>
       </div>
     </form>

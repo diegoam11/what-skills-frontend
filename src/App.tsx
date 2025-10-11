@@ -10,11 +10,11 @@ import { LoginView } from "./pages/login/LoginView";
 import { RegisterView } from "./pages/register/RegisterView";
 import { JobsView } from "./pages/jobs/JobsView";
 import { SkillsView } from "./pages/skills/SkillsView";
-import { ProfileView } from "./pages/profile/ProfileView";
 import { GoalsView } from "./pages/goals/GoalsView";
 import { LearningView } from "./pages/learning/LearningView";
 import { RouterLayout } from "./common/RouterLayout";
-import authService from './services/authService';
+import authService from "./services/authService";
+import { UserProfileView } from "./pages/user-profile/UserProfileView";
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -44,7 +44,11 @@ function App() {
         <Route
           path="/"
           element={
-            isAuthenticated ? <Navigate to="/dashboard" /> : <Navigate to="/login" />
+            isAuthenticated ? (
+              <Navigate to="/dashboard" />
+            ) : (
+              <Navigate to="/login" />
+            )
           }
         />
         <Route
@@ -66,18 +70,17 @@ function App() {
             <Route path="/dashboard" element={<DashboardView />} />
             <Route path="/jobs" element={<JobsView />} />
             <Route path="/skills" element={<SkillsView />} />
-            <Route path="/profile" element={<ProfileView />} />
-            <Route path="/goals" element={<GoalsView />} /> {/* La ruta en tu sidebar era /users, la cambiamos a /goals para que sea más clara */}
+            <Route path="/goals" element={<GoalsView />} />{" "}
+            {/* La ruta en tu sidebar era /users, la cambiamos a /goals para que sea más clara */}
             <Route path="/learning" element={<LearningView />} />
+            <Route path="/profile" element={<UserProfileView />} />
           </Route>
         )}
 
         {/* Catch-all */}
         <Route
           path="*"
-          element={
-            <Navigate to={isAuthenticated ? "/dashboard" : "/login"} />
-          }
+          element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} />}
         />
       </Routes>
     </Router>
