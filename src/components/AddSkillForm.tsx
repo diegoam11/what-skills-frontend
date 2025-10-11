@@ -102,7 +102,7 @@ export const AddSkillForm: React.FC<AddSkillFormProps> = ({
         </button>
         <button
           type="submit"
-          className="px-4 py-2 bg-[#0FBB82] text-white font-semibold rounded-xl hover:bg-green-700 transition-colors shadow-sm cursor-pointer"
+          className="px-4 py-2 bg-[#0FBB82] text-white font-semibold rounded-xl hover:bg-[#0FAE7D] transition-colors shadow-sm cursor-pointer"
         >
           Agregar
         </button>

@@ -83,7 +83,7 @@ export const SkillsView: React.FC = () => {
               <h2 className="text-xl font-semibold capitalize">{category}</h2>
               <button
                 onClick={() => handleOpenModal(category)}
-                className="flex items-center gap-2 px-4 py-2 text-sm bg-[#0FBB82] text-white font-semibold rounded-xl hover:bg-green-700 transition cursor-pointer"
+                className="flex items-center gap-2 px-4 py-2 text-sm bg-[#0FBB82] text-white font-semibold rounded-xl hover:bg-[#0FAE7D] transition cursor-pointer"
               >
                 <Plus size={16} />
                 Añadir

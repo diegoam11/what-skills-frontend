@@ -1,7 +1,7 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { RegisterLogic } from './RegisterLogic';
-import { SearchableSelect } from '../../components/SearchableSelect';
+import React from "react";
+import { Link } from "react-router-dom";
+import { RegisterLogic } from "./RegisterLogic";
+import { SearchableSelect } from "../../components/SearchableSelect";
 
 export const RegisterView: React.FC = () => {
   const {
@@ -19,7 +19,7 @@ export const RegisterView: React.FC = () => {
     jobs,
     loading,
     error,
-    handleSubmit
+    handleSubmit,
   } = RegisterLogic();
 
   return (
@@ -40,7 +40,10 @@ export const RegisterView: React.FC = () => {
           </p>
         </div>
 
-        <form className="mt-8 space-y-6 bg-white p-8 rounded-2xl shadow-lg" onSubmit={handleSubmit}>
+        <form
+          className="mt-8 space-y-6 bg-white p-8 rounded-2xl shadow-lg"
+          onSubmit={handleSubmit}
+        >
           {/* Error Message */}
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
@@ -51,7 +54,10 @@ export const RegisterView: React.FC = () => {
           <div className="space-y-4">
             {/* Email */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Correo electrónico
               </label>
               <input
@@ -69,7 +75,10 @@ export const RegisterView: React.FC = () => {
 
             {/* Password */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Contraseña
               </label>
               <input
@@ -88,7 +97,10 @@ export const RegisterView: React.FC = () => {
 
             {/* Confirm Password */}
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="confirmPassword"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Confirmar contraseña
               </label>
               <input
@@ -133,14 +145,17 @@ export const RegisterView: React.FC = () => {
               disabled={loading}
               className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-[#0FBB82] hover:bg-[#0FAE7D] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0FBB82] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-all duration-200"
             >
-              {loading ? 'Creando cuenta...' : 'Crear cuenta'}
+              {loading ? "Creando cuenta..." : "Crear cuenta"}
             </button>
           </div>
 
           <div className="text-center">
             <p className="text-sm text-gray-600">
-              ¿Ya tienes una cuenta?{' '}
-              <Link to="/login" className="font-medium text-[#0FBB82] hover:text-[#0FAE7D]">
+              ¿Ya tienes una cuenta?{" "}
+              <Link
+                to="/login"
+                className="font-medium text-[#0FBB82] hover:text-[#0FAE7D]"
+              >
                 Inicia sesión
               </Link>
             </p>

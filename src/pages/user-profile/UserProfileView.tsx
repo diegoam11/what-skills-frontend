@@ -37,12 +37,10 @@ export const UserProfileView: React.FC = () => {
         onSubmit={handleSubmit}
         className="bg-white w-full max-w-3xl p-8 rounded-2xl shadow-lg space-y-8"
       >
-        {/* 1️⃣ Datos Personales y Académicos */}
         <section>
           <h1 className="text-2xl font-semibold text-gray-800 mb-6">
             Datos Personales y Académicos
           </h1>
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <InputText
               label="Nombres"
@@ -80,12 +78,10 @@ export const UserProfileView: React.FC = () => {
           </div>
         </section>
 
-        {/* 2️⃣ Objetivos Profesionales */}
         <section>
           <h1 className="text-2xl font-semibold text-gray-800 mb-6">
             Objetivos Profesionales
           </h1>
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <SearchableSelect
               label="Puesto laboral que desea conseguir"
@@ -96,17 +92,16 @@ export const UserProfileView: React.FC = () => {
             <SearchableSelect
               label="Áreas o industrias de interés"
               options={industryOptions}
-              value={industries}
               onChange={setIndustries}
+              value={industries}
             />
           </div>
         </section>
 
-        {/* Submit */}
         <div className="text-right">
           <button
             type="submit"
-            className="px-6 w-full py-2 bg-[#0FBB82] text-white font-semibold rounded-xl hover:bg-green-700 transition-colors shadow-sm cursor-pointer"
+            className="px-6 w-full py-2 bg-[#0FBB82] text-white font-semibold rounded-xl hover:bg-[#0FAE7D] transition-colors shadow-sm cursor-pointer"
           >
             Guardar
           </button>

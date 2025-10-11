@@ -1,73 +1,100 @@
 import { useState, useEffect } from "react";
 import type { Skill } from "../../types";
 
-// CAMBIO: Se define el tipo de categoría para usarlo en todo el código.
 export type SkillCategory = "Técnicas" | "Blandas";
 
-// CAMBIO: Se actualizan las categorías en los datos de ejemplo.
-const fetchUserSkills = async (): Promise<Skill[]> => {
-  console.log("Fetching user skills...");
-  const mockSkills: Skill[] = [
-    { id: "s1", name: "Python", category: "lenguaje", proficiency: "avanzado" },
-    {
-      id: "s2",
-      name: "React",
-      category: "framework",
-      proficiency: "intermedio",
-    },
-    {
-      id: "s3",
-      name: "Docker",
-      category: "herramienta",
-      proficiency: "intermedio",
-    },
-    {
-      id: "s4",
-      name: "Comunicación",
-      category: "blanda",
-      proficiency: "avanzado",
-    },
-  ];
-  return new Promise((resolve) => setTimeout(() => resolve(mockSkills), 500));
+// Función segura para leer el objeto completo de userData de localStorage
+const getUserData = (): any => {
+  try {
+    const data = localStorage.getItem("userData");
+    return data ? JSON.parse(data) : {};
+  } catch (error) {
+    console.error("Error al leer userData de localStorage:", error);
+    return {};
+  }
 };
 
 export const useSkillsLogic = () => {
   const [skills, setSkills] = useState<Skill[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Carga inicial de habilidades desde localStorage
   useEffect(() => {
-    const loadSkills = async () => {
-      setIsLoading(true);
-      const data = await fetchUserSkills();
-      setSkills(data);
-      setIsLoading(false);
-    };
-    loadSkills();
+    console.log("Cargando habilidades desde localStorage...");
+    setIsLoading(true);
+    const userData = getUserData();
+    // Si userData tiene un array de skills, lo usamos. Si no, empezamos con un array vacío.
+    setSkills(userData.skills || []);
+    setIsLoading(false);
   }, []);
 
-  const handleDeleteSkill = (skillId: string) => {
-    console.log("Deleting skill:", skillId);
-    setSkills((currentSkills) => currentSkills.filter((s) => s.id !== skillId));
-    // TODO: Implementar llamada a la API para eliminar la habilidad
+  // Función para guardar el array completo de skills en localStorage
+  const saveSkillsToStorage = (updatedSkills: Skill[]) => {
+    try {
+      const currentData = getUserData();
+      const updatedUserData = {
+        ...currentData,
+        skills: updatedSkills,
+      };
+      localStorage.setItem("userData", JSON.stringify(updatedUserData));
+      console.log("Habilidades guardadas en localStorage:", updatedUserData);
+    } catch (error) {
+      console.error("Error al guardar habilidades en localStorage:", error);
+    }
   };
 
-  // CAMBIO: handleAddSkill ahora acepta la categoría como argumento.
+  const handleDeleteSkill = (skillId: string) => {
+    console.log("Eliminando habilidad:", skillId);
+    const updatedSkills = skills.filter((s) => s.id !== skillId);
+    setSkills(updatedSkills); // Actualiza el estado de React
+    saveSkillsToStorage(updatedSkills); // Persiste el cambio en localStorage
+  };
+
   const handleAddSkill = (
     newSkill: { name: string; proficiency: string },
     category: SkillCategory
   ) => {
-    console.log(`Adding skill '${newSkill.name}' to category '${category}'`);
+    console.log(
+      `Agregando habilidad '${newSkill.name}' a la categoría '${category}'`
+    );
+
+    // Obtenemos el label legible de la habilidad seleccionada
+    const skillLabel =
+      allTechnicalSkills
+        .concat(allSoftSkills)
+        .find((s) => s.value === newSkill.name)?.label || newSkill.name;
+
     const skillToAdd: Skill = {
       id: `s${Date.now()}`, // ID temporal
-      name: newSkill.name,
-      // La categoría ahora viene determinada por el botón que se presionó.
-      // Guardamos la sub-categoría original, aunque la agrupación principal sea otra.
+      name: skillLabel, // Guardamos el label legible
       category: category === "Técnicas" ? "herramienta" : "blanda",
-      proficiency: newSkill.proficiency as Skill["proficiency"],
+      proficiency: newSkill.proficiency,
     };
-    setSkills((currentSkills) => [...currentSkills, skillToAdd]);
-    // TODO: Implementar llamada a la API para añadir la habilidad
+
+    const updatedSkills = [...skills, skillToAdd];
+    setSkills(updatedSkills); // Actualiza el estado de React
+    saveSkillsToStorage(updatedSkills); // Persiste el cambio en localStorage
   };
 
   return { skills, isLoading, handleDeleteSkill, handleAddSkill };
 };
+
+// Se mueven aquí para que handleAddSkill pueda buscar el label
+const allTechnicalSkills = [
+  { value: "javascript", label: "JavaScript" },
+  { value: "typescript", label: "TypeScript" },
+  { value: "python", label: "Python" },
+  { value: "java", label: "Java" },
+  { value: "rust", label: "Rust" },
+  { value: "docker", label: "Docker" },
+  { value: "kubernetes", label: "Kubernetes" },
+  { value: "aws", label: "AWS" },
+];
+
+const allSoftSkills = [
+  { value: "comunicacion", label: "Comunicación" },
+  { value: "trabajo_en_equipo", label: "Trabajo en Equipo" },
+  { value: "resolucion_de_problemas", label: "Resolución de Problemas" },
+  { value: "liderazgo", label: "Liderazgo" },
+  { value: "pensamiento_critico", label: "Pensamiento Crítico" },
+];
