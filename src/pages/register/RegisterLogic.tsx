@@ -71,7 +71,17 @@ export const RegisterLogic = () => {
 
     try {
       // Registrar usuario con el servicio simulado
-      await mockAuthService.register(email, password, career, job);
+      const careerLabel = careers.find(c => c.value === career)?.label || career;
+      const jobLabel = jobs.find(j => j.value === job)?.label || job;
+
+      await mockAuthService.register(
+        email, 
+        password, 
+        career, 
+        job,
+        careerLabel, // label (ej. "Ingeniería de Sistemas")
+        jobLabel
+      );
 
       console.log("Usuario registrado exitosamente");
 

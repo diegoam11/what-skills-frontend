@@ -9,6 +9,16 @@ export interface MockUser {
   job?: string;
   displayName: string;
   createdAt: string;
+  currentSubscription?: {
+    planId: string;
+    planName: string;
+    startDate: string;
+    endDate: string;
+    isActive: boolean;
+    isTrial: boolean;
+  career_name?: string;
+  position_name?: string;
+  };
 }
 
 export interface StoredUser {
@@ -18,6 +28,17 @@ export interface StoredUser {
   career?: string;
   job?: string;
   displayName: string;
+
+  currentSubscription?: {
+    planId: string;
+    planName: string;
+    startDate: string;
+    endDate: string;
+    isActive: boolean;
+    isTrial: boolean;
+  };
+  career_name?: string;
+  position_name?: string;
 }
 
 class MockAuthService {
@@ -78,7 +99,8 @@ class MockAuthService {
     return userData ? JSON.parse(userData) : null;
   }
 
-  // Login
+  
+  // Login  
   async login(email: string, password: string): Promise<StoredUser> {
     const users = await this.initializeUsers();
     
@@ -100,7 +122,10 @@ class MockAuthService {
       role: user.role,
       career: user.career,
       job: user.job,
-      displayName: user.displayName
+      displayName: user.displayName,
+      currentSubscription: user.currentSubscription, 
+      career_name: user.career_name,
+      position_name: user.position_name,
     };
     localStorage.setItem(this.userKey, JSON.stringify(storedUser));
 
@@ -114,7 +139,14 @@ class MockAuthService {
   }
 
   // Registro
-  async register(email: string, password: string, career: string, job: string): Promise<StoredUser> {
+  async register(
+    email: string, 
+    password: string, 
+    career: string, 
+    job: string,
+    careerLabel: string,// label
+    jobLabel: string // label
+  ): Promise<StoredUser> {
     const users = await this.initializeUsers();
     
     // Verificar si el email ya existe
@@ -122,16 +154,32 @@ class MockAuthService {
       throw new Error('Este correo ya está registrado');
     }
 
+    // (Datos hardcodeados del plan_trial de users.json)
+    const trialSubscription = {
+      planId: "plan_trial",
+      planName: "Plan Trial",
+      startDate: new Date().toISOString(),
+      endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 días
+      isActive: true,
+      isTrial: true,
+    };
+
     // Crear nuevo usuario
     const newUser: MockUser = {
       id: Date.now().toString(),
       email,
       password,
       role: 'user',
-      career,
-      job,
+      career: career, 
+      job: job,
+
+      // Nombres legibles
+      career_name: careerLabel,
+      position_name: jobLabel,
+      
       displayName: email.split('@')[0],
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      currentSubscription: trialSubscription,
     };
 
     // Agregar a la lista de usuarios
