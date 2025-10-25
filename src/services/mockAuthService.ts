@@ -4,8 +4,9 @@ export interface MockUser {
   id: string;
   email: string;
   password: string;
-  career: string;
-  job: string;
+  role: 'admin' | 'user';
+  career?: string;
+  job?: string;
   displayName: string;
   createdAt: string;
 }
@@ -13,8 +14,9 @@ export interface MockUser {
 export interface StoredUser {
   id: string;
   email: string;
-  career: string;
-  job: string;
+  role: 'admin' | 'user';
+  career?: string;
+  job?: string;
   displayName: string;
 }
 
@@ -48,6 +50,7 @@ class MockAuthService {
           id: '1',
           email: 'admin@whatskills.com',
           password: '123456',
+          role: 'admin',
           career: 'sistemas',
           job: 'fullstack',
           displayName: 'Usuario Admin',
@@ -94,6 +97,7 @@ class MockAuthService {
     const storedUser: StoredUser = {
       id: user.id,
       email: user.email,
+      role: user.role,
       career: user.career,
       job: user.job,
       displayName: user.displayName
@@ -101,6 +105,12 @@ class MockAuthService {
     localStorage.setItem(this.userKey, JSON.stringify(storedUser));
 
     return storedUser;
+  }
+
+  // Verificar si el usuario actual es admin
+  isAdmin(): boolean {
+    const user = this.getUser();
+    return user?.role === 'admin';
   }
 
   // Registro
@@ -117,6 +127,7 @@ class MockAuthService {
       id: Date.now().toString(),
       email,
       password,
+      role: 'user',
       career,
       job,
       displayName: email.split('@')[0],

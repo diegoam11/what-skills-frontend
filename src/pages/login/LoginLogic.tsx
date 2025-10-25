@@ -1,9 +1,7 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { mockAuthService } from "../../services/mockAuthService";
 
 export const useLoginLogic = () => {
-  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -18,11 +16,8 @@ export const useLoginLogic = () => {
       // Intentar login con el servicio simulado
       await mockAuthService.login(email, password);
       
-      // Si el login es exitoso, redirigir al dashboard
-      navigate("/dashboard");
-      
-      // Recargar la página para actualizar el estado de autenticación
-      window.location.reload();
+      // Redirigir a la raíz y dejar que App.tsx maneje la redirección según el rol
+      window.location.href = "/";
     } catch (err: any) {
       console.error("Error en login:", err);
       setError(err.message || "Error al iniciar sesión. Verifica tus credenciales.");

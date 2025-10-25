@@ -15,14 +15,26 @@ import { LearningView } from "./pages/learning/LearningView";
 import { RouterLayout } from "./common/RouterLayout";
 import { mockAuthService } from "./services/mockAuthService";
 import { UserProfileView } from "./pages/user-profile/UserProfileView";
+import { AdminUsersView } from "./pages/admin/AdminUsersView";
+import { AdminPlansView } from "./pages/admin/AdminPlansView";
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Verificar sesión activa usando mockAuthService
-    setIsAuthenticated(mockAuthService.isAuthenticated());
+    const authenticated = mockAuthService.isAuthenticated();
+    setIsAuthenticated(authenticated);
+    
+    if (authenticated) {
+      const adminStatus = mockAuthService.isAdmin();
+      setIsAdmin(adminStatus);
+      console.log('🔐 Auth Check:', { authenticated, isAdmin: adminStatus });
+      console.log('👤 User Data:', mockAuthService.getUser());
+    }
+    
     setLoading(false);
   }, []);
 
@@ -45,7 +57,7 @@ function App() {
           path="/"
           element={
             isAuthenticated ? (
-              <Navigate to="/dashboard" />
+              isAdmin ? <Navigate to="/admin/users" /> : <Navigate to="/dashboard" />
             ) : (
               <Navigate to="/login" />
             )
@@ -54,24 +66,32 @@ function App() {
         <Route
           path="/login"
           element={
-            !isAuthenticated ? <LoginView /> : <Navigate to="/dashboard" />
+            !isAuthenticated ? <LoginView /> : isAdmin ? <Navigate to="/admin/users" /> : <Navigate to="/dashboard" />
           }
         />
         <Route
           path="/register"
           element={
-            !isAuthenticated ? <RegisterView /> : <Navigate to="/dashboard" />
+            !isAuthenticated ? <RegisterView /> : isAdmin ? <Navigate to="/admin/users" /> : <Navigate to="/dashboard" />
           }
         />
 
-        {/* Rutas protegidas (dentro del layout) */}
-        {isAuthenticated && (
+        {/* Rutas de Administrador (sin layout, simple) */}
+        {isAuthenticated && isAdmin && (
+          <>
+            <Route path="/admin/users" element={<AdminUsersView />} />
+            <Route path="/admin/plans" element={<AdminPlansView />} />
+            <Route path="/admin" element={<Navigate to="/admin/users" />} />
+          </>
+        )}
+
+        {/* Rutas protegidas de usuarios normales (dentro del layout) */}
+        {isAuthenticated && !isAdmin && (
           <Route element={<RouterLayout />}>
             <Route path="/dashboard" element={<DashboardView />} />
             <Route path="/jobs" element={<JobsView />} />
             <Route path="/skills" element={<SkillsView />} />
-            <Route path="/goals" element={<GoalsView />} />{" "}
-            {/* La ruta en tu sidebar era /users, la cambiamos a /goals para que sea más clara */}
+            <Route path="/goals" element={<GoalsView />} />
             <Route path="/learning" element={<LearningView />} />
             <Route path="/profile" element={<UserProfileView />} />
           </Route>
@@ -80,7 +100,7 @@ function App() {
         {/* Catch-all */}
         <Route
           path="*"
-          element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} />}
+          element={<Navigate to={isAuthenticated ? (isAdmin ? "/admin/users" : "/dashboard") : "/login"} />}
         />
       </Routes>
     </Router>
