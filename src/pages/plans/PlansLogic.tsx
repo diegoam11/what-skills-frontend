@@ -8,7 +8,7 @@ export const usePlansLogic = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPlanForPayment, setSelectedPlanForPayment] = useState<Plan | null>(null);
 
-  // Carga inicial de datos (sin cambios)
+  // Carga inicial de datos
   useEffect(() => {
     const loadData = async () => {
       setIsLoading(true);
@@ -62,7 +62,9 @@ export const usePlansLogic = () => {
       }
     };
     loadData();
-  }, [plans]); // <--- CAMBIO: Hacemos que se recargue si 'plans' cambia
+    // --- CAMBIO: Volvemos a poner el array vacío ---
+    // Esto asegura que el código solo se ejecute UNA VEZ al cargar
+  }, []); 
 
   // Lógica de SUSCRIPCIÓN (sin cambios)
   const confirmSubscription = () => {
@@ -107,11 +109,12 @@ export const usePlansLogic = () => {
     alert(`¡Pago completado! Te has suscrito al ${selectedPlanForPayment.name}`);
   };
 
-  // --- 1. NUEVA FUNCIÓN PARA CANCELAR ---
+  // NUEVA FUNCIÓN PARA CANCELAR
   const handleCancelSubscription = () => {
     if (!currentUser) return;
 
     // 1. Encontrar el plan Trial en la lista de planes
+    // (usará el estado 'plans' que ya se cargó en el useEffect)
     const trialPlan = plans.find((p) => p.code === "TRIAL");
     if (!trialPlan) {
       console.error("No se encontró el plan Trial. No se puede cancelar.");
@@ -129,7 +132,6 @@ export const usePlansLogic = () => {
     }
 
     // 3. Crear la nueva suscripción "Trial"
-    // (le damos 7 días nuevos de "prueba")
     const newSubscription = {
       planId: trialPlan.id,
       planName: trialPlan.name,
@@ -189,7 +191,6 @@ export const usePlansLogic = () => {
     openPaymentModal,
     closePaymentModal,
     confirmSubscription,
-    // --- 2. EXPORTAR LA NUEVA FUNCIÓN ---
     handleCancelSubscription,
   };
 };
