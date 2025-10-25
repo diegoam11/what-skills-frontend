@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { SearchableSelect } from "./SearchableSelect";
 import { Select } from "./Select";
-import type { SkillCategory } from "../Skills/SkillsLogic"; // Asumiendo la ruta
+import type { SkillCategory } from "../pages/skills/SkillsLogic.tsx"; // Asumiendo la ruta
 
 // CAMBIO 1: Separamos las habilidades en dos listas distintas.
 const technicalSkills = [
