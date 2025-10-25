@@ -1,7 +1,7 @@
-import { useState } from "react";
-import { useSkillsLogic } from "./SkillsLogic";
+import { use, useEffect, useState, useRef } from "react";
+import { testDeepSeekAPI, useSkillsLogic } from "./SkillsLogic";
 import type { SkillCategory } from "./SkillsLogic";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, UploadCloud } from "lucide-react";
 import { Modal } from "../../components/Modal";
 import { AddSkillForm } from "../../components/AddSkillForm";
 import type { Skill } from "../../types";
@@ -30,12 +30,31 @@ const groupSkillsByCategory = (
 };
 
 export const SkillsView: React.FC = () => {
-  const { skills, isLoading, handleDeleteSkill, handleAddSkill } =
-    useSkillsLogic();
+  const {
+    skills,
+    isLoading,
+    handleDeleteSkill,
+    handleAddSkill,
+    isExtracting,
+    handleAddSkillsFromCV,
+  } = useSkillsLogic();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [categoryForNewSkill, setCategoryForNewSkill] =
     useState<SkillCategory | null>(null);
   const [formKey, setFormKey] = useState(Date.now());
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      handleAddSkillsFromCV(file);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -75,6 +94,32 @@ export const SkillsView: React.FC = () => {
           <h1 className="text-2xl font-semibold text-gray-800">
             Mis Habilidades
           </h1>
+          <div>
+            <input
+              type="file"
+              accept=".pdf"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              style={{ display: "none" }} // Ocultamos el input feo
+            />
+            <button
+              onClick={handleUploadClick}
+              disabled={isExtracting} // Deshabilitar mientras procesa
+              className="flex items-center gap-2 px-4 py-2 text-sm bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 transition cursor-pointer disabled:bg-indigo-300 disabled:cursor-not-allowed"
+            >
+              {isExtracting ? (
+                <>
+                  <Spinner size="sm" />
+                  Extrayendo...
+                </>
+              ) : (
+                <>
+                  <UploadCloud size={16} />
+                  Extraer desde CV
+                </>
+              )}
+            </button>
+          </div>
         </div>
 
         {(Object.keys(groupedSkills) as SkillCategory[]).map((category) => (
