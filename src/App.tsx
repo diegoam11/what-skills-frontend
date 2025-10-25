@@ -17,6 +17,7 @@ import { mockAuthService } from "./services/mockAuthService";
 import { UserProfileView } from "./pages/user-profile/UserProfileView";
 import { AdminUsersView } from "./pages/admin/AdminUsersView";
 import { AdminPlansView } from "./pages/admin/AdminPlansView";
+import { PlansView } from "./pages/plans/plansView";
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -94,6 +95,7 @@ function App() {
             <Route path="/goals" element={<GoalsView />} />
             <Route path="/learning" element={<LearningView />} />
             <Route path="/profile" element={<UserProfileView />} />
+            <Route path="/plans" element={<PlansView />} />
           </Route>
         )}
 

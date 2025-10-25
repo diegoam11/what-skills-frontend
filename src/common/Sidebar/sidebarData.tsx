@@ -4,6 +4,7 @@ import {
   GraduationCap,
   UserCog,
   CircleDot,
+  CreditCard,
 } from "lucide-react";
 import type { ReactNode } from "react";
 
@@ -15,11 +16,16 @@ export const sidebarData: { section: string; items: SidebarItemDef[] }[] = [
     items: [
       { path: "/dashboard", label: "Inicio", icon: <Home size={20} /> },
       { path: "/profile", label: "Pefil", icon: <UserCog size={20} /> },
-
+      
       {
         path: "/skills",
         label: "Habilidades",
         icon: <GraduationCap size={20} />,
+      },
+      { 
+        path: "/plans", 
+        label: "Planes", 
+        icon: <CreditCard size={20} /> 
       },
     ],
   },
