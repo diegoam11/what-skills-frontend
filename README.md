@@ -1,73 +1,103 @@
-# React + TypeScript + Vite
+# WhatSkills Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Plataforma de gestión de habilidades y empleabilidad para estudiantes y profesionales. Este proyecto es el frontend de la aplicación WhatSkills, desarrollado con React, TypeScript y Vite.
 
-Currently, two official plugins are available:
+## 🚀 Características Principales
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Dashboard Interactivo**: Visualización de métricas de empleabilidad y progreso.
+- **Gestión de Habilidades**: Añadir, evaluar y visualizar brechas de habilidades.
+- **Planes de Aprendizaje**: Seguimiento de cursos y objetivos de aprendizaje.
+- **Roles de Usuario**:
+  - **Administrador**: Gestión de usuarios, planes y configuración global.
+  - **Usuario**: Gestión de perfil, habilidades y objetivos personales.
+- **Gráficos**: Visualización de datos con Recharts.
+- **Autenticación**: Sistema de login simulado (Mock Auth) para desarrollo y pruebas.
 
-## React Compiler
+## 🛠️ Tecnologías Utilizadas
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Core**: React 19, TypeScript
+- **Build Tool**: Vite 7
+- **Estilos**: Tailwind CSS 4
+- **Routing**: React Router DOM 7
+- **Gráficos**: Recharts
+- **Iconos**: Lucide React
+- **Infraestructura**: Docker, Nginx
 
-## Expanding the ESLint configuration
+## 📋 Prerrequisitos
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- Node.js (v18 o superior recomendado)
+- npm o yarn
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## 🔧 Instalación y Configuración Local
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+1. **Clonar el repositorio**
+   `ash
+   git clone <url-del-repositorio>
+   cd what-skills-frontend
+   `
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+2. **Instalar dependencias**
+   `ash
+   npm install
+   `
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+3. **Ejecutar servidor de desarrollo**
+   `ash
+   npm run dev
+   `
+   La aplicación estará disponible en http://localhost:5173 (o el puerto que indique Vite).
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## 🔑 Credenciales de Prueba
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+El proyecto utiliza un sistema de autenticación simulado (MockAuthService) que lee usuarios desde public/users.json. Puedes usar las siguientes cuentas para probar los diferentes roles:
+
+| Rol | Email | Contraseña |
+|-----|-------|------------|
+| **Administrador** | dmin@whatskills.com | 123456 |
+| **Usuario** | demo@unmsm.edu.pe | demo123 |
+
+## 🐳 Ejecución con Docker
+
+El proyecto incluye configuración para desplegarse en un contenedor Docker servido por Nginx.
+
+1. **Construir la imagen**
+   `ash
+   docker build -t what-skills-frontend .
+   `
+
+2. **Correr el contenedor**
+   `ash
+   docker run -p 8080:80 what-skills-frontend
+   `
+   La aplicación estará disponible en http://localhost:8080.
+
+## 📂 Estructura del Proyecto
+
+`
+src/
+├── api/            # Configuración de llamadas a API
+├── assets/         # Recursos estáticos (imágenes, fuentes)
+├── common/         # Componentes comunes (Layouts, Sidebar, Navbar)
+├── components/     # Componentes reutilizables UI (Inputs, Modales, Cards)
+├── context/        # Contextos de React (Estado global)
+├── pages/          # Vistas principales de la aplicación
+│   ├── admin/      # Vistas de administrador
+│   ├── dashboard/  # Vista principal
+│   ├── login/      # Autenticación
+│   ├── profile/    # Perfil de usuario
+│   └── ...
+├── services/       # Lógica de negocio y servicios (Auth, etc.)
+├── types.ts        # Definiciones de tipos TypeScript globales
+└── utils/          # Funciones de utilidad
+`
+
+## 📜 Scripts Disponibles
+
+- 
+pm run dev: Inicia el servidor de desarrollo.
+- 
+pm run build: Compila la aplicación para producción.
+- 
+pm run preview: Vista previa de la build de producción localmente.
+- 
+pm run lint: Ejecuta el linter para verificar calidad de código.

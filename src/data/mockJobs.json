@@ -1,0 +1,72 @@
+[
+    {
+        "id": "1",
+        "title": "Senior Frontend Developer",
+        "company": "TechCorp",
+        "location": "Remote",
+        "salary": 5000,
+        "postedDate": "2023-10-25",
+        "requiredSkills": [
+            "React",
+            "TypeScript",
+            "Tailwind CSS"
+        ],
+        "description": "We are looking for an experienced Frontend Developer to lead our web team."
+    },
+    {
+        "id": "2",
+        "title": "Data Scientist",
+        "company": "DataAI",
+        "location": "Lima, Peru",
+        "salary": 4500,
+        "postedDate": "2023-10-20",
+        "requiredSkills": [
+            "Python",
+            "SQL",
+            "Machine Learning"
+        ],
+        "description": "Join our data team to build predictive models."
+    },
+    {
+        "id": "3",
+        "title": "UX/UI Designer",
+        "company": "CreativeStudio",
+        "location": "Hybrid",
+        "salary": 3500,
+        "postedDate": "2023-10-28",
+        "requiredSkills": [
+            "Figma",
+            "Prototyping",
+            "User Research"
+        ],
+        "description": "Design beautiful interfaces for our clients."
+    },
+    {
+        "id": "4",
+        "title": "Backend Engineer",
+        "company": "CloudSystems",
+        "location": "Remote",
+        "salary": 6000,
+        "postedDate": "2023-10-15",
+        "requiredSkills": [
+            "Node.js",
+            "AWS",
+            "Docker"
+        ],
+        "description": "Scale our backend infrastructure."
+    },
+    {
+        "id": "5",
+        "title": "Junior Python Developer",
+        "company": "StartupX",
+        "location": "Lima, Peru",
+        "salary": 2000,
+        "postedDate": "2023-10-29",
+        "requiredSkills": [
+            "Python",
+            "Django",
+            "Git"
+        ],
+        "description": "Great opportunity for a junior developer to learn and grow."
+    }
+]
