@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { mockAuthService } from "../../services/mockAuthService";
+import { authService } from "../../services/auth";
+import { careers, jobs } from "../../utils/masterData";
 
 export const RegisterLogic = () => {
   const navigate = useNavigate();
@@ -12,41 +13,7 @@ export const RegisterLogic = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const careers = [
-    { value: "sistemas", label: "Ingeniería de Sistemas" },
-    { value: "software", label: "Ingeniería de Software" },
-    { value: "computacion", label: "Ciencia de la Computación" },
-    { value: "industrial", label: "Ingeniería Industrial" },
-    { value: "electronica", label: "Ingeniería Electrónica" },
-    { value: "mecatronica", label: "Ingeniería Mecatrónica" },
-    { value: "administracion", label: "Administración de Empresas" },
-    { value: "marketing", label: "Marketing" },
-    { value: "diseno_ux_ui", label: "Diseño UX/UI" },
-    { value: "economia", label: "Economía" },
-    { value: "otra", label: "Otra carrera" },
-  ];
-
-  const jobs = [
-    { value: "frontend", label: "Desarrollador Frontend" },
-    { value: "backend", label: "Desarrollador Backend" },
-    { value: "fullstack", label: "Desarrollador Full-Stack" },
-    { value: "devops", label: "Ingeniero DevOps / SRE" },
-    { value: "qa", label: "Ingeniero de Calidad / QA" },
-    { value: "analista_datos", label: "Analista de Datos" },
-    {
-      value: "cientifico_datos",
-      label: "Científico de Datos (Data Scientist)",
-    },
-    { value: "ingeniero_datos", label: "Ingeniero de Datos (Data Engineer)" },
-    { value: "disenador_ux_ui", label: "Diseñador UX/UI" },
-    { value: "project_manager", label: "Jefe de Proyecto / Project Manager" },
-    { value: "product_manager", label: "Product Manager" },
-    { value: "scrum_master", label: "Scrum Master" },
-    { value: "analista_negocios", label: "Analista de Negocios" },
-    { value: "arquitecto_software", label: "Arquitecto de Software" },
-    { value: "ciberseguridad", label: "Especialista en Ciberseguridad" },
-  ];
-
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -71,7 +38,23 @@ export const RegisterLogic = () => {
 
     try {
       // Registrar usuario con el servicio simulado
-      await mockAuthService.register(email, password, career, job);
+      const careerLabel = careers.find(c => c.value === career)?.label || career;
+      const jobLabel = jobs.find(j => j.value === job)?.label || job;
+
+      await authService.register({
+        email, 
+        password, 
+        career, 
+        job,
+        careerLabel, // label (ej. "Ingeniería de Sistemas")
+        jobLabel,
+
+        // Campos obligatorios en RegisterRequest que no pedimos en el form visual:
+        first_name: email.split("@")[0], // Usamos la parte local del correo como nombre temporal
+        last_name: "",
+        university: "No especificada",
+        semester: 1,
+      });
 
       console.log("Usuario registrado exitosamente");
 

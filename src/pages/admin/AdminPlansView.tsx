@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { CreditCard, Edit2, Trash2, Plus, DollarSign, Calendar } from "lucide-react";
 import { AdminLayout } from "./AdminLayout";
-
+import type { Plan } from "../../types/domain/Plan";
+/*
 interface Plan {
   id: string;
   code: string;
@@ -14,7 +15,7 @@ interface Plan {
   features: string[];
   displayOrder: number;
 }
-
+*/
 export const AdminPlansView: React.FC = () => {
   const [plans, setPlans] = useState<Plan[]>([]);
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);

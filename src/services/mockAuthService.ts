@@ -1,32 +1,27 @@
-// Servicio de autenticación simulado para presentación (sin backend real)
+import type { IAuthService } from "./IAuthService";
+import type { User } from "../types/domain/User";
+import type { LoginRequest, RegisterRequest } from "../api/endpoints";
 
-export interface MockUser {
-  id: string;
-  email: string;
-  password: string;
-  role: 'admin' | 'user';
-  career?: string;
-  job?: string;
-  displayName: string;
-  createdAt: string;
+interface MockDatabaseUser extends User {
+  password: string; // Campo extra solo para la DB interna
 }
 
-export interface StoredUser {
-  id: string;
-  email: string;
-  role: 'admin' | 'user';
-  career?: string;
-  job?: string;
-  displayName: string;
-}
 
-class MockAuthService {
+class MockAuthService implements IAuthService { // <--- CLAVE: implements
   private tokenKey = 'userToken';
   private userKey = 'userData';
   private usersStorageKey = 'mockUsers';
 
+  // Convierte un usuario de la "Base de datos" a un usuario de "Dominio"
+  // Esto elimina la contraseña antes de devolver los datos a la app.
+  private mapToDomainUser(dbUser: MockDatabaseUser): User {
+    // Desestructuramos para separar la contraseña del resto
+    const { password: password, ...domainUser } = dbUser;
+    return domainUser as User;
+  }
+
   // Inicializar usuarios desde JSON
-  private async initializeUsers(): Promise<MockUser[]> {
+  private async initializeUsers(): Promise<MockDatabaseUser[]> {
     try {
       // Intentar obtener usuarios de localStorage
       const storedUsers = localStorage.getItem(this.usersStorageKey);
@@ -37,34 +32,132 @@ class MockAuthService {
       // Si no hay usuarios en localStorage, cargar desde JSON
       const response = await fetch('/users.json');
       const data = await response.json();
-      
+
       // Guardar en localStorage para persistencia durante la sesión
       localStorage.setItem(this.usersStorageKey, JSON.stringify(data.users));
-      
+
       return data.users;
     } catch (error) {
       console.error('Error loading users:', error);
       // Retornar usuarios por defecto si hay error
-      const defaultUsers: MockUser[] = [
-        {
-          id: '1',
-          email: 'admin@whatskills.com',
-          password: '123456',
-          role: 'admin',
-          career: 'sistemas',
-          job: 'fullstack',
-          displayName: 'Usuario Admin',
-          createdAt: new Date().toISOString()
+      const defaultUser: MockDatabaseUser = {
+        id: '1',
+        email: 'admin@whatskills.com',
+        password: '123456',
+        role: 'admin',
+        displayName: 'Usuario Admin',
+        createdAt: new Date().toISOString(),
+        career: 'sistemas',
+        careerLabel: 'Ingeniería de Sistemas',
+        job: 'fullstack',
+        jobLabel: 'Full Stack Dev',
+        currentSubscription: {
+          planId: 'plan_admin',
+          planName: 'Admin Unlimited',
+          startDate: new Date().toISOString(),
+          endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+          isActive: true,
+          isTrial: false
         }
-      ];
-      localStorage.setItem(this.usersStorageKey, JSON.stringify(defaultUsers));
-      return defaultUsers;
+      };
+      localStorage.setItem(this.usersStorageKey, JSON.stringify([defaultUser]));
+      return [defaultUser];
     }
+  }
+
+  // 1. LOGIN: Adaptamos la firma para recibir un objeto (LoginRequest)
+  async login(credentials: LoginRequest): Promise<User> {
+    const users = await this.initializeUsers();
+
+    // --- DEBUG LOGS
+    console.log("Intentando login con:", credentials);
+    console.log("Usuarios en base de datos:", users);
+
+
+    // Buscamos coincidencia
+    const dbUser = users.find(u => {
+      const emailMatch = u.email === credentials.email;
+      const passMatch = u.password === credentials.password;
+
+      // Si el email coincide pero el password no, avísame
+      if (emailMatch && !passMatch) {
+        console.warn(`Usuario encontrado (${u.email}), pero password incorrecto.`);
+        console.warn(`Esperaba: '${u.password}', Recibí: '${credentials.password}'`);
+      }
+
+      return emailMatch && passMatch;
+    });
+
+    if (!dbUser) {
+      throw new Error('Credenciales inválidas');
+    }
+
+    // Generar token
+    const token = `mock_token_${dbUser.id}_${Date.now()}`;
+    localStorage.setItem(this.tokenKey, token);
+
+    // Convertimos a usuario de dominio (sin password) y guardamos
+    const userToReturn = this.mapToDomainUser(dbUser);
+    localStorage.setItem(this.userKey, JSON.stringify(userToReturn));
+
+    return userToReturn;
+  }
+
+
+  // 2. REGISTER: Adaptamos la firma para recibir un objeto (RegisterRequest)
+  async register(data: RegisterRequest): Promise<User> {
+    const users = await this.initializeUsers();
+
+    if (users.find(u => u.email === data.email)) {
+      throw new Error('Este correo ya está registrado');
+    }
+
+    // Lógica del plan Trial
+    const trialSubscription = {
+      planId: "plan_trial",
+      planName: "Plan Trial",
+      startDate: new Date().toISOString(),
+      endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      isActive: true,
+      isTrial: true,
+    };
+
+    // Crear el usuario para la DB (con password)
+    // NOTA: Asumimos que RegisterRequest no trae careerLabel/jobLabel por defecto,
+    // o deberías agregarlos al RegisterRequest en 'endpoints.ts'.
+    // Aquí los simulamos o los extraemos si vienen en 'data'.
+    const newDbUser: MockDatabaseUser = {
+      id: Date.now().toString(),
+      email: data.email,
+      password: data.password,
+      role: 'user',
+      displayName: data.first_name + ' ' + data.last_name, // O email.split
+      career: data.career,
+      careerLabel: 'Carrera Seleccionada', // Deberías pasar esto en data si lo tienes
+      job: 'puesto_pendiente', // Deberías pasar esto en data
+      jobLabel: 'Puesto Pendiente',
+      createdAt: new Date().toISOString(),
+      currentSubscription: trialSubscription,
+    };
+
+    users.push(newDbUser);
+    localStorage.setItem(this.usersStorageKey, JSON.stringify(users));
+
+    // Auto-login: llamamos a nuestro propio método login
+    return await this.login({ email: data.email, password: data.password });
+  }
+
+  // Logout
+  logout(): void {
+    localStorage.removeItem(this.tokenKey);
+    localStorage.removeItem(this.userKey);
+    // Opcional: recargar página para limpiar estados de memoria
+    window.location.href = '/login';
   }
 
   // Verificar si está autenticado
   isAuthenticated(): boolean {
-    return !!localStorage.getItem(this.tokenKey);
+    return !!this.getToken
   }
 
   // Obtener token
@@ -72,87 +165,37 @@ class MockAuthService {
     return localStorage.getItem(this.tokenKey);
   }
 
-  // Obtener datos del usuario actual
-  getUser(): StoredUser | null {
+  // 4. GET CURRENT USER: Devuelve User o null
+  getCurrentUser(): User | null {
     const userData = localStorage.getItem(this.userKey);
-    return userData ? JSON.parse(userData) : null;
+    if (!userData) return null;
+    return JSON.parse(userData) as User;
   }
 
-  // Login
-  async login(email: string, password: string): Promise<StoredUser> {
-    const users = await this.initializeUsers();
-    
-    // Buscar usuario
-    const user = users.find(u => u.email === email && u.password === password);
-    
-    if (!user) {
-      throw new Error('Credenciales inválidas');
-    }
 
-    // Generar token simulado
-    const token = `mock_token_${user.id}_${Date.now()}`;
-    localStorage.setItem(this.tokenKey, token);
 
-    // Guardar datos del usuario (sin contraseña)
-    const storedUser: StoredUser = {
-      id: user.id,
-      email: user.email,
-      role: user.role,
-      career: user.career,
-      job: user.job,
-      displayName: user.displayName
-    };
-    localStorage.setItem(this.userKey, JSON.stringify(storedUser));
-
-    return storedUser;
-  }
 
   // Verificar si el usuario actual es admin
   isAdmin(): boolean {
-    const user = this.getUser();
+    const user = this.getCurrentUser();
     return user?.role === 'admin';
   }
 
-  // Registro
-  async register(email: string, password: string, career: string, job: string): Promise<StoredUser> {
-    const users = await this.initializeUsers();
-    
-    // Verificar si el email ya existe
-    if (users.find(u => u.email === email)) {
-      throw new Error('Este correo ya está registrado');
+  // 6. REFRESH TOKEN (Método requerido por la interfaz aunque aquí sea fake)
+  async refreshToken(): Promise<User | null> {
+    // 1. Simulamos un pequeño retraso de red (opcional, para realismo)
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    // 2. Verificamos si tenemos token y datos guardados
+    if (!this.getToken() || !localStorage.getItem(this.userKey)) {
+      return null;
     }
 
-    // Crear nuevo usuario
-    const newUser: MockUser = {
-      id: Date.now().toString(),
-      email,
-      password,
-      role: 'user',
-      career,
-      job,
-      displayName: email.split('@')[0],
-      createdAt: new Date().toISOString()
-    };
-
-    // Agregar a la lista de usuarios
-    users.push(newUser);
-    localStorage.setItem(this.usersStorageKey, JSON.stringify(users));
-
-    // Auto-login después del registro
-    return await this.login(email, password);
-  }
-
-  // Logout
-  logout(): void {
-    localStorage.removeItem(this.tokenKey);
-    localStorage.removeItem(this.userKey);
-  }
-
-  // Obtener todos los usuarios (para debugging)
-  async getAllUsers(): Promise<MockUser[]> {
-    return await this.initializeUsers();
+    // 3. En el Mock, confiamos en que si están en localStorage, son válidos.
+    // En el Backend real, aquí harías: await apiClient.post('/auth/refresh')
+    return this.getCurrentUser();
   }
 }
 
 export const mockAuthService = new MockAuthService();
-export default mockAuthService;
+

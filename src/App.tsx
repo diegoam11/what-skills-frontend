@@ -13,11 +13,11 @@ import { SkillsView } from "./pages/skills/SkillsView";
 import { GoalsView } from "./pages/goals/GoalsView";
 import { LearningView } from "./pages/learning/LearningView";
 import { RouterLayout } from "./common/RouterLayout";
-import { mockAuthService } from "./services/mockAuthService";
 import { UserProfileView } from "./pages/user-profile/UserProfileView";
 import { AdminUsersView } from "./pages/admin/AdminUsersView";
 import { AdminPlansView } from "./pages/admin/AdminPlansView";
 import { PlansView } from "./pages/plans/plansView";
+import { authService } from "./services/auth";
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -25,18 +25,29 @@ function App() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Verificar sesión activa usando mockAuthService
-    const authenticated = mockAuthService.isAuthenticated();
-    setIsAuthenticated(authenticated);
-    
-    if (authenticated) {
-      const adminStatus = mockAuthService.isAdmin();
-      setIsAdmin(adminStatus);
-      console.log('🔐 Auth Check:', { authenticated, isAdmin: adminStatus });
-      console.log('👤 User Data:', mockAuthService.getUser());
-    }
-    
-    setLoading(false);
+    const initAuth = async () => {
+      try {
+        // Intentamos "refrescar" la sesión al cargar la página
+        const user = await authService.refreshToken();
+
+        if (user) {
+          setIsAuthenticated(true);
+          setIsAdmin(user.role === 'admin');
+          console.log('👤 Sesión restaurada:', user);
+        } else {
+          // Si no hay usuario (token inválido o no existe), limpiamos
+          setIsAuthenticated(false);
+          setIsAdmin(false);
+        }
+      } catch (error) {
+        console.error("Error inicializando auth:", error);
+        setIsAuthenticated(false);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initAuth();
   }, []);
 
   if (loading) {

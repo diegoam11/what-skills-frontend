@@ -1,16 +1,7 @@
 import { apiClient } from './base';
+import type { User } from '../types/domain/User';
+import type { Skill } from '../types/domain/Skill';
 
-// Types for API responses
-export interface User {
-  id: string;
-  first_name: string;
-  last_name: string;
-  email: string;
-  career: string;
-  university: string;
-  semester: number;
-  created_at: string;
-}
 
 export interface LoginRequest {
   email: string;
@@ -25,17 +16,14 @@ export interface RegisterRequest {
   career: string;
   university: string;
   semester: number;
+  job: string;         
+  jobLabel?: string;   
+  careerLabel?: string;
 }
 
 export interface AuthResponse {
   access_token: string;
   token_type: string;
-}
-
-export interface Skill {
-  name: string;
-  category: string;
-  proficiency: number;
 }
 
 export interface Experience {

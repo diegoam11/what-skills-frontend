@@ -11,12 +11,17 @@ interface User {
   lastName: string;
   career_name: string;
   position_name: string;
+  career: string;//label
+  position: string;//label
   currentSubscription: {
     planName: string;
     endDate: string;
     isActive: boolean;
   };
 }
+
+
+
 
 export const AdminUsersView: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);

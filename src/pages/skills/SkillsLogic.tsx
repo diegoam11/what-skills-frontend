@@ -1,32 +1,23 @@
 import { useState, useEffect } from "react";
-import type { Skill } from "../../types";
+import type { Skill, SkillCategory, SkillProficiency } from "../../types/domain/Skill";
+import { authService } from "../../services/auth"; // <--- USAR EL SERVICIO
+import type { User } from "../../types/domain/User";
+import { allTechnicalSkills, allSoftSkills } from "../../utils/masterData";
+
 import * as pdfjs from "pdfjs-dist";
-// Usar el worker desde node_modules (mismo que la versión instalada)
+// Configuración del worker
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.min.mjs",
   import.meta.url
 ).toString();
 
-import axios, { AxiosError } from "axios";
+import axios from "axios";
 
-export type SkillCategory = "Técnicas" | "Blandas";
-
-// Función segura para leer el objeto completo de userData de localStorage
-const getUserData = (): any => {
-  try {
-    const data = localStorage.getItem("userData");
-    return data ? JSON.parse(data) : {};
-  } catch (error) {
-    console.error("Error al leer userData de localStorage:", error);
-    return {};
-  }
-};
 
 const DEEPSEEK_API_KEY = import.meta.env.VITE_DEEPSEEK_API_KEY;
-
 const API_URL = "https://api.deepseek.com/v1/chat/completions";
 
-// --- Lógica para leer el PDF ---
+// --- Lógica para leer el PDF (Sin cambios) ---
 const extractTextFromPdf = async (file: File): Promise<string> => {
   const fileReader = new FileReader();
   return new Promise((resolve, reject) => {
@@ -50,22 +41,11 @@ const extractTextFromPdf = async (file: File): Promise<string> => {
   });
 };
 
-// --- Nueva función para llamar a DeepSeek con el texto del CV ---
+// --- Llamada a DeepSeek (Sin cambios) ---
 const extractSkillsFromCV = async (cvText: string) => {
-  // Este prompt es CRUCIAL. Le dice al modelo exactamente qué hacer y cómo formatear la salida.
   const prompt = `
     Analiza el siguiente texto extraído de un currículum vitae (CV) e identifica las habilidades técnicas y blandas.
-    Responde ÚNICAMENTE con un objeto JSON válido, sin texto introductorio ni explicaciones adicionales.
-    El objeto debe tener dos claves: "habilidadesTecnicas" y "habilidadesBlandas".
-    Cada clave debe contener un array de strings con las habilidades encontradas.
-    Si no encuentras habilidades en una categoría, devuelve un array vacío.
-
-    Ejemplo de respuesta esperada:
-    {
-      "habilidadesTecnicas": ["React", "TypeScript", "Node.js", "AWS", "Docker"],
-      "habilidadesBlandas": ["Comunicación efectiva", "Trabajo en equipo", "Liderazgo"]
-    }
-
+    Responde ÚNICAMENTE con un objeto JSON válido...
     Texto del CV a analizar:
     ---
     ${cvText}
@@ -78,9 +58,8 @@ const extractSkillsFromCV = async (cvText: string) => {
       {
         model: "deepseek-chat",
         messages: [{ role: "user", content: prompt }],
-        // Importante: pedir que la respuesta sea un objeto JSON
         response_format: { type: "json_object" },
-        temperature: 0.2, // Baja temperatura para respuestas más predecibles
+        temperature: 0.2,
       },
       {
         headers: {
@@ -89,160 +68,114 @@ const extractSkillsFromCV = async (cvText: string) => {
         },
       }
     );
-
     const content = response.data.choices[0].message.content;
-    // El modelo a veces devuelve el JSON como un string, hay que parsearlo.
     return JSON.parse(content);
   } catch (error) {
     console.error("Error al extraer habilidades con DeepSeek:", error);
-    throw error; // Propaga el error para que la UI pueda manejarlo
+    throw error;
   }
 };
 
-export const testDeepSeekAPI = async () => {
-  console.log("Probando la API de DeepSeek...");
-  return;
-  try {
-    const response = await axios.post(
-      API_URL,
-      // Payload (lo que enviamos)
-      {
-        model: "deepseek-chat", // Puedes cambiar a "deepseek-coder"
-        messages: [
-          {
-            role: "user",
-            content: "Hola, ¿quién eres?",
-          },
-        ],
-        max_tokens: 100,
-        temperature: 0.7,
-      },
-      // Headers (autenticación)
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${DEEPSEEK_API_KEY}`,
-        },
-      }
-    );
-
-    // Si todo sale bien, muestra la respuesta del modelo
-    console.log("¡Conexión exitosa!");
-    console.log("---------------------------------------");
-    const choice = response.data.choices[0];
-    console.log("Respuesta del modelo:", choice.message.content);
-    console.log("---------------------------------------");
-    console.log("Tokens usados:", response.data.usage.total_tokens);
-  } catch (error) {
-    // Manejo de errores
-    console.error("Error al conectar con la API de DeepSeek:");
-
-    if (axios.isAxiosError(error)) {
-      const axiosError = error as AxiosError;
-      if (axiosError.response) {
-        // El servidor respondió con un error (ej. clave incorrecta, modelo inválido)
-        console.error("Status:", axiosError.response.status);
-        console.error(
-          "Data:",
-          JSON.stringify(axiosError.response.data, null, 2)
-        );
-      } else if (axiosError.request) {
-        // La solicitud se hizo pero no hubo respuesta
-        console.error("No se recibió respuesta del servidor.");
-      } else {
-        // Error al configurar la solicitud
-        console.error("Error:", axiosError.message);
-      }
-    } else {
-      // Otro tipo de error
-      console.error("Error inesperado:", error);
-    }
-  }
-};
-
+// --- HOOK PRINCIPAL ---
 export const useSkillsLogic = () => {
   const [skills, setSkills] = useState<Skill[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isExtracting, setIsExtracting] = useState(false);
 
-  // Carga inicial de habilidades desde localStorage
+  // 1. Cargar habilidades usando authService
   useEffect(() => {
-    console.log("Cargando habilidades desde localStorage...");
+    console.log("Cargando habilidades del usuario actual...");
     setIsLoading(true);
-    const userData = getUserData();
-    // Si userData tiene un array de skills, lo usamos. Si no, empezamos con un array vacío.
-    setSkills(userData.skills || []);
+    
+    const user = authService.getCurrentUser();
+    
+    if (user && user.skills) {
+      setSkills(user.skills);
+    } else {
+      setSkills([]);
+    }
     setIsLoading(false);
   }, []);
 
-  // Función para guardar el array completo de skills en localStorage
+  // 2. Función SEGURA para guardar en localStorage
+  // NOTA: Como aún no tenemos backend para hacer authService.updateUser(data),
+  // tenemos que hacer un "patch" manual al localStorage, pero usando los datos del servicio.
   const saveSkillsToStorage = (updatedSkills: Skill[]) => {
     try {
-      const currentData = getUserData();
-      const updatedUserData = {
-        ...currentData,
+      const currentUser = authService.getCurrentUser();
+      if (!currentUser) return;
+
+      const updatedUser: User = {
+        ...currentUser,
         skills: updatedSkills,
       };
-      localStorage.setItem("userData", JSON.stringify(updatedUserData));
-      console.log("Habilidades guardadas en localStorage:", updatedUserData);
+
+      // Guardamos la "verdad" actualizada
+      // OJO: Esto sigue siendo un hack del Mock. 
+      // Con backend real, aquí haríamos: await apiClient.post('/skills', updatedSkills)
+      localStorage.setItem("userData", JSON.stringify(updatedUser));
+      
+      // Actualizamos también mockUsers para que persista si cerramos sesión
+      const mockUsers = localStorage.getItem("mockUsers");
+      if (mockUsers) {
+        const usersArray = JSON.parse(mockUsers);
+        const index = usersArray.findIndex((u: any) => u.id === currentUser.id);
+        if (index !== -1) {
+            // Cuidado: mockUsers tiene passwords, updatedUser no. 
+            // Fusionamos para no perder la password del mock.
+            usersArray[index] = { ...usersArray[index], ...updatedUser };
+            localStorage.setItem("mockUsers", JSON.stringify(usersArray));
+        }
+      }
+
+      console.log("Habilidades guardadas:", updatedUser);
     } catch (error) {
-      console.error("Error al guardar habilidades en localStorage:", error);
+      console.error("Error al guardar habilidades:", error);
     }
   };
 
   const handleDeleteSkill = (skillId: string) => {
-    console.log("Eliminando habilidad:", skillId);
     const updatedSkills = skills.filter((s) => s.id !== skillId);
-    setSkills(updatedSkills); // Actualiza el estado de React
-    saveSkillsToStorage(updatedSkills); // Persiste el cambio en localStorage
+    setSkills(updatedSkills);
+    saveSkillsToStorage(updatedSkills);
   };
 
   const handleAddSkill = (
-    newSkill: { name: string; proficiency: string },
+    newSkill: { name: string; proficiency: SkillProficiency },
     category: SkillCategory
   ) => {
-    console.log(
-      `Agregando habilidad '${newSkill.name}' a la categoría '${category}'`
-    );
-
-    // Obtenemos el label legible de la habilidad seleccionada
+    // Buscamos el label bonito en nuestras listas maestras
     const skillLabel =
       allTechnicalSkills
         .concat(allSoftSkills)
         .find((s) => s.value === newSkill.name)?.label || newSkill.name;
 
     const skillToAdd: Skill = {
-      id: `s${Date.now()}`, // ID temporal
-      name: skillLabel, // Guardamos el label legible
+      id: `s${Date.now()}`,
+      name: skillLabel,
+      // Mapeamos la categoría de la UI a la categoría del Dominio
       category: category === "Técnicas" ? "herramienta" : "blanda",
       proficiency: newSkill.proficiency,
     };
 
     const updatedSkills = [...skills, skillToAdd];
-    setSkills(updatedSkills); // Actualiza el estado de React
-    saveSkillsToStorage(updatedSkills); // Persiste el cambio en localStorage
+    setSkills(updatedSkills);
+    saveSkillsToStorage(updatedSkills);
   };
 
   const handleAddSkillsFromCV = async (file: File) => {
     setIsExtracting(true);
     try {
-      // 1. Extraer texto del PDF
-      console.log("Extrayendo texto del PDF...");
       const cvText = await extractTextFromPdf(file);
-
-      // 2. Enviar a DeepSeek y obtener habilidades
-      console.log("Enviando texto a DeepSeek para análisis...");
       const extractedSkills = await extractSkillsFromCV(cvText);
-
-      // 3. Formatear y añadir las nuevas habilidades
       const newSkillsToAdd: Skill[] = [];
 
       extractedSkills.habilidadesTecnicas?.forEach((skillName: string) => {
         newSkillsToAdd.push({
           id: `s${Date.now()}${Math.random()}`,
           name: skillName,
-          category: "herramienta", // Categoría por defecto
-          proficiency: "Intermedio", // Nivel por defecto
+          category: "herramienta",
+          proficiency: "Intermedio",
         });
       });
 
@@ -251,14 +184,12 @@ export const useSkillsLogic = () => {
           id: `s${Date.now()}${Math.random()}`,
           name: skillName,
           category: "blanda",
-          proficiency: "Avanzado", // Nivel por defecto
+          proficiency: "Avanzado",
         });
       });
 
-      // 4. Actualizar el estado (evitando duplicados por nombre)
-      const currentSkillNames = new Set(
-        skills.map((s) => s.name.toLowerCase())
-      );
+      // Filtramos duplicados (case insensitive)
+      const currentSkillNames = new Set(skills.map((s) => s.name.toLowerCase()));
       const uniqueNewSkills = newSkillsToAdd.filter(
         (s) => !currentSkillNames.has(s.name.toLowerCase())
       );
@@ -267,13 +198,13 @@ export const useSkillsLogic = () => {
         const updatedSkills = [...skills, ...uniqueNewSkills];
         setSkills(updatedSkills);
         saveSkillsToStorage(updatedSkills);
-        console.log(`${uniqueNewSkills.length} nuevas habilidades añadidas.`);
+        alert(`${uniqueNewSkills.length} habilidades añadidas.`);
       } else {
-        console.log("No se encontraron nuevas habilidades para añadir.");
+        alert("No se encontraron nuevas habilidades o ya las tenías agregadas.");
       }
     } catch (error) {
-      console.error("Falló el proceso de extracción de CV:", error);
-      alert("Hubo un error al procesar el CV. Por favor, intenta de nuevo.");
+      console.error("Error en proceso CV:", error);
+      alert("Error al procesar el CV.");
     } finally {
       setIsExtracting(false);
     }
@@ -288,23 +219,3 @@ export const useSkillsLogic = () => {
     handleAddSkillsFromCV,
   };
 };
-
-// Se mueven aquí para que handleAddSkill pueda buscar el label
-const allTechnicalSkills = [
-  { value: "javascript", label: "JavaScript" },
-  { value: "typescript", label: "TypeScript" },
-  { value: "python", label: "Python" },
-  { value: "java", label: "Java" },
-  { value: "rust", label: "Rust" },
-  { value: "docker", label: "Docker" },
-  { value: "kubernetes", label: "Kubernetes" },
-  { value: "aws", label: "AWS" },
-];
-
-const allSoftSkills = [
-  { value: "comunicacion", label: "Comunicación" },
-  { value: "trabajo_en_equipo", label: "Trabajo en Equipo" },
-  { value: "resolucion_de_problemas", label: "Resolución de Problemas" },
-  { value: "liderazgo", label: "Liderazgo" },
-  { value: "pensamiento_critico", label: "Pensamiento Crítico" },
-];
