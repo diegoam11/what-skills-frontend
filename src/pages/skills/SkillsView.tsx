@@ -1,16 +1,17 @@
-import { use, useEffect, useState, useRef } from "react";
-import { testDeepSeekAPI, useSkillsLogic } from "./SkillsLogic";
-import type { SkillCategory } from "./SkillsLogic";
+import { useState, useRef } from "react";
+import { useSkillsLogic } from "./SkillsLogic";
+import type { Skill, SkillCategory, SkillProficiency } from "../../types/domain/Skill";
 import { Plus, Trash2, UploadCloud } from "lucide-react";
 import { Modal } from "../../components/Modal";
 import { AddSkillForm } from "../../components/AddSkillForm";
-import type { Skill } from "../../types";
 import { Spinner } from "../../components/Spinner";
+
+type VisualCategory = 'Técnicas' | 'Blandas';
 
 const groupSkillsByCategory = (
   skills: Skill[]
-): Record<SkillCategory, Skill[]> => {
-  const grouped: Record<SkillCategory, Skill[]> = {
+): Record<VisualCategory, Skill[]> => {
+  const grouped: Record<VisualCategory, Skill[]> = {
     Técnicas: [],
     Blandas: [],
   };
@@ -22,7 +23,7 @@ const groupSkillsByCategory = (
       )
     ) {
       grouped["Técnicas"].push(skill);
-    } else if (skill.category.toLowerCase() === "blanda") {
+    } else {
       grouped["Blandas"].push(skill);
     }
   });
@@ -79,7 +80,7 @@ export const SkillsView: React.FC = () => {
 
   const handleAddNewSkill = (newSkill: {
     name: string;
-    proficiency: string;
+    proficiency: SkillProficiency;
   }) => {
     if (categoryForNewSkill) {
       handleAddSkill(newSkill, categoryForNewSkill);
@@ -122,7 +123,7 @@ export const SkillsView: React.FC = () => {
           </div>
         </div>
 
-        {(Object.keys(groupedSkills) as SkillCategory[]).map((category) => (
+        {(Object.keys(groupedSkills) as VisualCategory[]).map((category) => (
           <div key={category} className="bg-white p-6 rounded-2xl shadow-sm">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold capitalize">{category}</h2>

@@ -1,5 +1,8 @@
 import { useState, useEffect } from "react";
-import type { User, Plan } from "./types";
+import type { User, Subscription } from "../../types/domain/User";
+import type { Plan } from "../../types/domain/Plan";
+
+import { authService } from "../../services/auth";
 
 export const usePlansLogic = () => {
   const [plans, setPlans] = useState<Plan[]>([]);
@@ -8,17 +11,22 @@ export const usePlansLogic = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPlanForPayment, setSelectedPlanForPayment] = useState<Plan | null>(null);
 
-  // Carga inicial de datos
+  // 1. Carga inicial de datos
   useEffect(() => {
     const loadData = async () => {
       setIsLoading(true);
       try {
-        // Cargar planes
+        // A. Cargar Usuario (Usando la fuente de verdad)
+        const user = authService.getCurrentUser();
+        setCurrentUser(user);
+
+        // B. Cargar Planes (Lógica específica de esta vista)
         const plansData = localStorage.getItem("mockPlans");
         if (plansData) {
           setPlans(JSON.parse(plansData));
         } else {
-          console.warn("mockPlans no encontrado. Cargando desde /users.json...");
+          // Si no existen, los cargamos del JSON maestro
+          console.warn("Cargando planes iniciales...");
           const response = await fetch("/users.json");
           const data = await response.json();
           if (data && data.plans) {
@@ -26,51 +34,46 @@ export const usePlansLogic = () => {
             setPlans(data.plans);
           }
         }
-
-        // Cargar TODOS los usuarios
-        let usersList: User[] = [];
-        const mockUsersData = localStorage.getItem("mockUsers");
-        if (mockUsersData) {
-          usersList = JSON.parse(mockUsersData);
-        } else {
-          console.warn("mockUsers no encontrado. Cargando desde /users.json...");
-          const response = await fetch("/users.json");
-          const data = await response.json();
-          if (data && data.users) {
-            localStorage.setItem("mockUsers", JSON.stringify(data.users));
-            usersList = data.users;
-          }
-        }
-
-        // Cargar el usuario actual (y encontrar sus datos COMPLETOS)
-        const simpleUserData = localStorage.getItem("userData");
-        if (simpleUserData && usersList.length > 0) {
-          const simpleUser = JSON.parse(simpleUserData);
-          const fullUser = usersList.find(
-            (u: User) => u.id === simpleUser.id
-          );
-          if (fullUser) {
-            setCurrentUser(fullUser);
-          } else {
-            setCurrentUser(simpleUser);
-          }
-        }
       } catch (error) {
-        console.error("Error al cargar datos de planes:", error);
+        console.error("Error al cargar datos:", error);
       } finally {
         setIsLoading(false);
       }
     };
     loadData();
-    // --- CAMBIO: Volvemos a poner el array vacío ---
-    // Esto asegura que el código solo se ejecute UNA VEZ al cargar
-  }, []); 
+  }, []);
 
-  // Lógica de SUSCRIPCIÓN (sin cambios)
+  // --- HELPER: Guardar cambios en el Mock (Base de datos falsa) ---
+  // Esto simula la petición PUT /users/subscription
+  const saveSubscriptionChange = (updatedUser: User) => {
+    // 1. Actualizamos estado local
+    setCurrentUser(updatedUser);
+
+    // 2. Actualizamos sesión actual (localStorage 'userData')
+    localStorage.setItem("userData", JSON.stringify(updatedUser));
+
+    // 3. Actualizamos la "Base de Datos" (localStorage 'mockUsers')
+    try {
+      const mockUsersData = localStorage.getItem("mockUsers");
+      if (mockUsersData) {
+        const mockUsers = JSON.parse(mockUsersData);
+        // Buscamos y actualizamos el usuario en la lista maestra
+        // Usamos map para crear un nuevo array inmutable
+        const updatedMockUsers = mockUsers.map((u: any) =>
+          u.id === updatedUser.id ? { ...u, ...updatedUser } : u
+        );
+        localStorage.setItem("mockUsers", JSON.stringify(updatedMockUsers));
+      }
+    } catch (error) {
+      console.error("Error al persistir suscripción en mockUsers:", error);
+    }
+  };
+
+  // 2. Lógica de SUSCRIPCIÓN
   const confirmSubscription = () => {
     if (!currentUser || !selectedPlanForPayment) return;
 
-    const newSubscription = {
+    const newSubscription: Subscription = {
       planId: selectedPlanForPayment.id,
       planName: selectedPlanForPayment.name,
       startDate: new Date().toISOString(),
@@ -81,58 +84,33 @@ export const usePlansLogic = () => {
       isTrial: selectedPlanForPayment.isTrial,
     };
 
-    const updatedCurrentUser = {
+    const updatedUser: User = {
       ...currentUser,
       currentSubscription: newSubscription,
     };
-    localStorage.setItem("userData", JSON.stringify(updatedCurrentUser));
-    setCurrentUser(updatedCurrentUser);
 
-    try {
-      const mockUsersData = localStorage.getItem("mockUsers");
-      if (mockUsersData) {
-        let mockUsers = JSON.parse(mockUsersData);
-        const userIndex = mockUsers.findIndex(
-          (u: User) => u.id === currentUser.id
-        );
-        if (userIndex !== -1) {
-          mockUsers[userIndex] = updatedCurrentUser;
-          localStorage.setItem("mockUsers", JSON.stringify(mockUsers));
-        }
-      }
-    } catch (error) {
-      console.error("Error al actualizar mockUsers:", error);
-    }
+    saveSubscriptionChange(updatedUser);
 
     setIsModalOpen(false);
     setSelectedPlanForPayment(null);
     alert(`¡Pago completado! Te has suscrito al ${selectedPlanForPayment.name}`);
   };
 
-  // NUEVA FUNCIÓN PARA CANCELAR
+  // 3. Lógica de CANCELACIÓN
   const handleCancelSubscription = () => {
     if (!currentUser) return;
 
-    // 1. Encontrar el plan Trial en la lista de planes
-    // (usará el estado 'plans' que ya se cargó en el useEffect)
     const trialPlan = plans.find((p) => p.code === "TRIAL");
     if (!trialPlan) {
-      console.error("No se encontró el plan Trial. No se puede cancelar.");
-      alert("Error: No se encontró el plan gratuito.");
+      alert("Error: No se encontró configuración del plan gratuito.");
       return;
     }
 
-    // 2. Confirmación
-    if (
-      !window.confirm(
-        "¿Estás seguro de que quieres cancelar tu suscripción? Volverás al plan gratuito."
-      )
-    ) {
+    if (!window.confirm("¿Estás seguro de que quieres cancelar tu suscripción? Volverás al plan gratuito.")) {
       return;
     }
 
-    // 3. Crear la nueva suscripción "Trial"
-    const newSubscription = {
+    const newSubscription: Subscription = {
       planId: trialPlan.id,
       planName: trialPlan.name,
       startDate: new Date().toISOString(),
@@ -143,35 +121,15 @@ export const usePlansLogic = () => {
       isTrial: true,
     };
 
-    // 4. Actualizar 'userData' (para el usuario actual)
-    const updatedCurrentUser = {
+    const updatedUser: User = {
       ...currentUser,
       currentSubscription: newSubscription,
     };
-    localStorage.setItem("userData", JSON.stringify(updatedCurrentUser));
-    setCurrentUser(updatedCurrentUser); // Actualizar estado local
 
-    // 5. Actualizar 'mockUsers' (para la vista de Admin)
-    try {
-      const mockUsersData = localStorage.getItem("mockUsers");
-      if (mockUsersData) {
-        let mockUsers = JSON.parse(mockUsersData);
-        const userIndex = mockUsers.findIndex(
-          (u: User) => u.id === currentUser.id
-        );
-        if (userIndex !== -1) {
-          mockUsers[userIndex] = updatedCurrentUser;
-          localStorage.setItem("mockUsers", JSON.stringify(mockUsers));
-        }
-      }
-    } catch (error) {
-      console.error("Error al actualizar mockUsers:", error);
-    }
-
+    saveSubscriptionChange(updatedUser);
     alert("Suscripción cancelada. Has vuelto al plan gratuito.");
   };
 
-  // Controladores del Modal (sin cambios)
   const openPaymentModal = (plan: Plan) => {
     setSelectedPlanForPayment(plan);
     setIsModalOpen(true);

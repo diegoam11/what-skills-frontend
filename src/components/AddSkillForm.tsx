@@ -1,54 +1,28 @@
 import { useState } from "react";
 import { SearchableSelect } from "./SearchableSelect";
 import { Select } from "./Select";
-import type { SkillCategory } from "../pages/skills/SkillsLogic.tsx"; // Asumiendo la ruta
+import type { SkillCategory, SkillProficiency } from "../types/domain/Skill";
+import { allTechnicalSkills, allSoftSkills, proficiencyLevels } from "../utils/masterData";
 
-// CAMBIO 1: Separamos las habilidades en dos listas distintas.
-const technicalSkills = [
-  { value: "javascript", label: "JavaScript" },
-  { value: "typescript", label: "TypeScript" },
-  { value: "python", label: "Python" },
-  { value: "java", label: "Java" },
-  { value: "rust", label: "Rust" },
-  { value: "docker", label: "Docker" },
-  { value: "kubernetes", label: "Kubernetes" },
-  { value: "aws", label: "AWS" },
-];
-
-const softSkills = [
-  { value: "comunicacion", label: "Comunicación" },
-  { value: "trabajo_en_equipo", label: "Trabajo en Equipo" },
-  { value: "resolucion_de_problemas", label: "Resolución de Problemas" },
-  { value: "liderazgo", label: "Liderazgo" },
-  { value: "pensamiento_critico", label: "Pensamiento Crítico" },
-];
-
-const proficiencyLevels = [
-  { value: "basico", label: "Básico" },
-  { value: "intermedio", label: "Intermedio" },
-  { value: "avanzado", label: "Avanzado" },
-];
 
 interface AddSkillFormProps {
-  onSkillAdd: (skill: { name: string; proficiency: string }) => void;
+  onSkillAdd: (skill: { name: string; proficiency: SkillProficiency }) => void;
   onClose: () => void;
-  // CAMBIO 2: Añadimos la categoría como una prop requerida.
   category: SkillCategory;
 }
 
 export const AddSkillForm: React.FC<AddSkillFormProps> = ({
   onSkillAdd,
   onClose,
-  category, // Usamos la nueva prop
+  category,
 }) => {
-  const [proficiency, setProficiency] = useState("");
+  // 3. Estado tipado: Puede ser un nivel válido O vacío al inicio
+  const [proficiency, setProficiency] = useState<SkillProficiency | "">("");
   const [skillName, setSkillName] = useState("");
   const [error, setError] = useState("");
 
-  // CAMBIO 3: Determinamos qué lista de habilidades mostrar
-  // basado en la categoría que recibimos como prop.
   const availableSkills =
-    category === "Técnicas" ? technicalSkills : softSkills;
+    category === "Técnicas" ? allTechnicalSkills : allSoftSkills;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,31 +34,35 @@ export const AddSkillForm: React.FC<AddSkillFormProps> = ({
       setError("Por favor, selecciona un nivel de dominio.");
       return;
     }
-    onSkillAdd({ name: skillName, proficiency });
+
+    // 4. Al enviar, TypeScript ya sabe que NO es vacío por la validación anterior
+    onSkillAdd({
+      name: skillName,
+      proficiency: proficiency as SkillProficiency
+    });
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <SearchableSelect
         label="Habilidad"
-        // CAMBIO 4: Usamos la lista de habilidades filtrada.
         options={availableSkills}
         value={skillName}
         onChange={(value) => {
           setSkillName(value);
           if (error) setError("");
         }}
-        placeholder={`Ej: ${
-          category === "Técnicas" ? "Python" : "Liderazgo"
-        }...`}
+        placeholder={`Ej: ${category === "Técnicas" ? "Python" : "Liderazgo"
+          }...`}
       />
 
       <Select
         label="Nivel de dominio"
-        options={proficiencyLevels}
+        options={proficiencyLevels} // <--- Usa la lista de masterData que coincide con tu imagen
         value={proficiency}
         onChange={(value) => {
-          setProficiency(value);
+          // Casteamos el valor del select al tipo estricto
+          setProficiency(value as SkillProficiency);
           if (error) setError("");
         }}
         placeholder="Selecciona un nivel..."
@@ -104,7 +82,7 @@ export const AddSkillForm: React.FC<AddSkillFormProps> = ({
           type="submit"
           className="px-4 py-2 bg-[#0FBB82] text-white font-semibold rounded-xl hover:bg-[#0FAE7D] transition-colors shadow-sm cursor-pointer"
         >
-          Agregar
+          Añadir
         </button>
       </div>
     </form>

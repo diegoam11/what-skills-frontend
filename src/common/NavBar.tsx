@@ -1,5 +1,5 @@
 import { Bell, UserCircle, LogOut } from "lucide-react";
-import { authService } from "../services/authService";
+import { authService } from "../services/auth";
 import { NotificationDropdown } from "./NotificationDropdown";
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";

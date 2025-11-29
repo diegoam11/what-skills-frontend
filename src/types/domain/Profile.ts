@@ -23,10 +23,3 @@ export interface Education {
   startDate: string;
   endDate: string;
 }
-
-export interface Skill {
-  id: string;
-  name: string;
-  category: 'lenguaje' | 'framework' | 'herramienta' | 'blanda';
-  proficiency: 'basico' | 'intermedio' | 'avanzado';
-}

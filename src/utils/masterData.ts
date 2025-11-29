@@ -32,3 +32,29 @@ export const jobs = [
   { value: "arquitecto_software", label: "Arquitecto de Software" },
   { value: "ciberseguridad", label: "Especialista en Ciberseguridad" },
 ];
+
+
+export const allTechnicalSkills = [
+  { value: "javascript", label: "JavaScript" },
+  { value: "typescript", label: "TypeScript" },
+  { value: "python", label: "Python" },
+  { value: "java", label: "Java" },
+  { value: "rust", label: "Rust" },
+  { value: "docker", label: "Docker" },
+  { value: "kubernetes", label: "Kubernetes" },
+  { value: "aws", label: "AWS" },
+];
+
+export const allSoftSkills = [
+  { value: "comunicacion", label: "Comunicación" },
+  { value: "trabajo_en_equipo", label: "Trabajo en Equipo" },
+  { value: "resolucion_de_problemas", label: "Resolución de Problemas" },
+  { value: "liderazgo", label: "Liderazgo" },
+  { value: "pensamiento_critico", label: "Pensamiento Crítico" },
+];
+
+export const proficiencyLevels = [
+  { value: "Básico", label: "Básico" },
+  { value: "Intermedio", label: "Intermedio" },
+  { value: "Avanzado", label: "Avanzado" },
+];

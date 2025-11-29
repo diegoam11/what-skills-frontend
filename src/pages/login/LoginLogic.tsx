@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { mockAuthService } from "../../services/mockAuthService";
+import { authService } from "../../services/auth";
 
 export const useLoginLogic = () => {
   const [email, setEmail] = useState("");
@@ -14,7 +14,7 @@ export const useLoginLogic = () => {
 
     try {
       // Intentar login con el servicio simulado
-      await mockAuthService.login(email, password);
+      await authService.login({email, password});
       
       // Redirigir a la raíz y dejar que App.tsx maneje la redirección según el rol
       window.location.href = "/";

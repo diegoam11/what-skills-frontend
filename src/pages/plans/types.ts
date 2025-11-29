@@ -1,5 +1,5 @@
 // Tipos simplificados para esta vista
-
+/*
 export interface Plan {
   id: string;
   code: string;
@@ -26,3 +26,4 @@ export interface User {
   };
   // ... otros campos que ya tienes
 }
+*/
