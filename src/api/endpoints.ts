@@ -129,6 +129,19 @@ export interface JobIngestResponse {
   message: string;
 }
 
+export interface Plan {
+  id?: number; // Opcional al crear
+  code: string;
+  name: string;
+  description: string;
+  price: number;
+  duration_days: number; // Backend manda snake_case
+  is_trial: boolean;
+  is_active: boolean;
+  features: string[];
+  display_order: number;
+}
+
 // Authentication API
 export const authAPI = {
   login: (data: LoginRequest): Promise<AuthResponse> =>
@@ -204,4 +217,25 @@ export const skillsAPI = {
 export const jobsAPI = {
   ingest: (data: JobIngestRequest): Promise<JobIngestResponse> => 
     apiClient.post('/jobs/ingest', data).then(res => res.data),
+};
+
+// --- PLANS API ---
+export const plansAPI = {
+  getAll: (): Promise<Plan[]> => 
+    apiClient.get('/plans/').then(res => res.data),
+
+  create: (plan: Plan): Promise<Plan> => 
+    apiClient.post('/plans/', plan).then(res => res.data),
+
+  update: (id: number, plan: Plan): Promise<Plan> => 
+    apiClient.put(`/plans/${id}`, plan).then(res => res.data),
+
+  delete: (id: number): Promise<void> => 
+    apiClient.delete(`/plans/${id}`).then(res => res.data),
+
+  subscribe: (planCode: string): Promise<any> => 
+    apiClient.post(`/plans/subscribe/${planCode}`).then(res => res.data),
+
+  cancel: (): Promise<any> => 
+    apiClient.post('/plans/cancel').then(res => res.data),
 };

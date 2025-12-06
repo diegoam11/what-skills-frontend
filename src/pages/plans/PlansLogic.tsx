@@ -1,41 +1,27 @@
 import { useState, useEffect } from "react";
-import type { User, Subscription } from "../../types/domain/User";
-import type { Plan } from "../../types/domain/Plan";
-
-import { authService } from "../../services/auth";
+import { useAuth } from "../../context/AuthContext";
+import { plansAPI, type Plan } from "../../api/endpoints";
 
 export const usePlansLogic = () => {
   const [plans, setPlans] = useState<Plan[]>([]);
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  // Usamos el usuario del contexto global, y la función para recargarlo
+  const { user, refreshUser } = useAuth(); 
+  
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPlanForPayment, setSelectedPlanForPayment] = useState<Plan | null>(null);
 
-  // 1. Carga inicial de datos
+  // 1. Cargar Planes del Backend
   useEffect(() => {
     const loadData = async () => {
       setIsLoading(true);
       try {
-        // A. Cargar Usuario (Usando la fuente de verdad)
-        const user = authService.getCurrentUser();
-        setCurrentUser(user);
-
-        // B. Cargar Planes (Lógica específica de esta vista)
-        const plansData = localStorage.getItem("mockPlans");
-        if (plansData) {
-          setPlans(JSON.parse(plansData));
-        } else {
-          // Si no existen, los cargamos del JSON maestro
-          console.warn("Cargando planes iniciales...");
-          const response = await fetch("/users.json");
-          const data = await response.json();
-          if (data && data.plans) {
-            localStorage.setItem("mockPlans", JSON.stringify(data.plans));
-            setPlans(data.plans);
-          }
-        }
+        const data = await plansAPI.getAll();
+        // Opcional: Filtramos solo los activos para que el usuario no vea planes archivados
+        const activePlans = data.filter(p => p.is_active);
+        setPlans(activePlans);
       } catch (error) {
-        console.error("Error al cargar datos:", error);
+        console.error("Error al cargar planes:", error);
       } finally {
         setIsLoading(false);
       }
@@ -43,93 +29,52 @@ export const usePlansLogic = () => {
     loadData();
   }, []);
 
-  // --- HELPER: Guardar cambios en el Mock (Base de datos falsa) ---
-  // Esto simula la petición PUT /users/subscription
-  const saveSubscriptionChange = (updatedUser: User) => {
-    // 1. Actualizamos estado local
-    setCurrentUser(updatedUser);
+  // 2. Lógica de SUSCRIPCIÓN (Real)
+  const confirmSubscription = async () => {
+    if (!user || !selectedPlanForPayment) return;
 
-    // 2. Actualizamos sesión actual (localStorage 'userData')
-    localStorage.setItem("userData", JSON.stringify(updatedUser));
-
-    // 3. Actualizamos la "Base de Datos" (localStorage 'mockUsers')
     try {
-      const mockUsersData = localStorage.getItem("mockUsers");
-      if (mockUsersData) {
-        const mockUsers = JSON.parse(mockUsersData);
-        // Buscamos y actualizamos el usuario en la lista maestra
-        // Usamos map para crear un nuevo array inmutable
-        const updatedMockUsers = mockUsers.map((u: any) =>
-          u.id === updatedUser.id ? { ...u, ...updatedUser } : u
-        );
-        localStorage.setItem("mockUsers", JSON.stringify(updatedMockUsers));
-      }
+      // A. Llamada al Backend (POST /plans/subscribe/CODE)
+      await plansAPI.subscribe(selectedPlanForPayment.code);
+      
+      // B. Actualizar el Contexto Global
+      // Esto hace que el "Plan Actual" se actualice en toda la app sin recargar página
+      await refreshUser(); 
+      
+      // C. Feedback y Limpieza
+      alert(`¡Pago exitoso! Bienvenido al ${selectedPlanForPayment.name}`);
+      setIsModalOpen(false);
+      setSelectedPlanForPayment(null);
+
     } catch (error) {
-      console.error("Error al persistir suscripción en mockUsers:", error);
+      console.error("Error suscribiendo:", error);
+      alert("Hubo un error al procesar tu suscripción. Intenta nuevamente.");
     }
   };
 
-  // 2. Lógica de SUSCRIPCIÓN
-  const confirmSubscription = () => {
-    if (!currentUser || !selectedPlanForPayment) return;
+  // 3. Lógica de CANCELACIÓN (Real)
+  const handleCancelSubscription = async () => {
+    if (!user) return;
 
-    const newSubscription: Subscription = {
-      planId: selectedPlanForPayment.id,
-      planName: selectedPlanForPayment.name,
-      startDate: new Date().toISOString(),
-      endDate: new Date(
-        Date.now() + selectedPlanForPayment.durationDays * 24 * 60 * 60 * 1000
-      ).toISOString(),
-      isActive: true,
-      isTrial: selectedPlanForPayment.isTrial,
-    };
-
-    const updatedUser: User = {
-      ...currentUser,
-      currentSubscription: newSubscription,
-    };
-
-    saveSubscriptionChange(updatedUser);
-
-    setIsModalOpen(false);
-    setSelectedPlanForPayment(null);
-    alert(`¡Pago completado! Te has suscrito al ${selectedPlanForPayment.name}`);
-  };
-
-  // 3. Lógica de CANCELACIÓN
-  const handleCancelSubscription = () => {
-    if (!currentUser) return;
-
-    const trialPlan = plans.find((p) => p.code === "TRIAL");
-    if (!trialPlan) {
-      alert("Error: No se encontró configuración del plan gratuito.");
+    if (!window.confirm("¿Estás seguro de que quieres cancelar tu suscripción y volver al plan gratuito?")) {
       return;
     }
 
-    if (!window.confirm("¿Estás seguro de que quieres cancelar tu suscripción? Volverás al plan gratuito.")) {
-      return;
+    try {
+      // A. Llamada al Backend
+      await plansAPI.cancel();
+
+      // B. Actualizar el Contexto Global
+      await refreshUser();
+
+      alert("Suscripción cancelada. Has vuelto al plan gratuito.");
+    } catch (error) {
+      console.error("Error cancelando:", error);
+      alert("No se pudo cancelar la suscripción.");
     }
-
-    const newSubscription: Subscription = {
-      planId: trialPlan.id,
-      planName: trialPlan.name,
-      startDate: new Date().toISOString(),
-      endDate: new Date(
-        Date.now() + trialPlan.durationDays * 24 * 60 * 60 * 1000
-      ).toISOString(),
-      isActive: true,
-      isTrial: true,
-    };
-
-    const updatedUser: User = {
-      ...currentUser,
-      currentSubscription: newSubscription,
-    };
-
-    saveSubscriptionChange(updatedUser);
-    alert("Suscripción cancelada. Has vuelto al plan gratuito.");
   };
 
+  // --- Manejo del Modal ---
   const openPaymentModal = (plan: Plan) => {
     setSelectedPlanForPayment(plan);
     setIsModalOpen(true);
@@ -142,7 +87,7 @@ export const usePlansLogic = () => {
 
   return {
     plans,
-    currentUser,
+    currentUser: user, // Mapeamos 'user' a 'currentUser' para mantener compatibilidad con la vista
     isLoading,
     isModalOpen,
     selectedPlanForPayment,

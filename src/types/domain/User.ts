@@ -24,6 +24,11 @@ export interface User {
   career_target?: string;
   academic_level?: string; // Python envía: career_target
 
+  // --- NUEVOS CAMPOS DE SUSCRIPCIÓN (Agrega esto) ---
+  plan_code?: string;          // Ej: "TRIAL", "MONTHLY"
+  subscription_status?: string; // Ej: "active", "cancelled"
+  subscription_end?: string;    // Fecha ISO
+
   // --- Relaciones ---
   skills?: Skill[];       // A futuro: Lista de habilidades
   
