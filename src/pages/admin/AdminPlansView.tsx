@@ -1,49 +1,35 @@
 import React, { useState, useEffect } from "react";
 import { CreditCard, Edit2, Trash2, Plus, DollarSign, Calendar } from "lucide-react";
 import { AdminLayout } from "./AdminLayout";
-import type { Plan } from "../../types/domain/Plan";
-/*
-interface Plan {
-  id: string;
-  code: string;
-  name: string;
-  description: string;
-  price: number;
-  durationDays: number;
-  isTrial: boolean;
-  isActive: boolean;
-  features: string[];
-  displayOrder: number;
-}
-*/
+import { plansAPI, type Plan } from "../../api/endpoints";
+
 export const AdminPlansView: React.FC = () => {
   const [plans, setPlans] = useState<Plan[]>([]);
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
+  // 1. Cargar planes desde el Backend al iniciar
   useEffect(() => {
     loadPlans();
   }, []);
 
   const loadPlans = async () => {
+    setIsLoading(true);
     try {
-      const response = await fetch("/users.json");
-      const data = await response.json();
-      const mockPlans = localStorage.getItem("mockPlans");
-      
-      if (mockPlans) {
-        setPlans(JSON.parse(mockPlans));
-      } else {
-        localStorage.setItem("mockPlans", JSON.stringify(data.plans));
-        setPlans(data.plans);
-      }
+      const data = await plansAPI.getAll();
+      setPlans(data);
     } catch (error) {
-      console.error("Error loading plans:", error);
+      console.error("Error cargando planes:", error);
+      alert("Error al conectar con el servidor.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleEdit = (plan: Plan) => {
+    // Clonamos el objeto para evitar mutaciones directas en el estado
     setSelectedPlan({ ...plan });
     setIsCreating(false);
     setShowEditModal(true);
@@ -51,56 +37,78 @@ export const AdminPlansView: React.FC = () => {
 
   const handleCreate = () => {
     setSelectedPlan({
-      id: `plan_${Date.now()}`,
+      // No asignamos ID, el backend lo hará
       code: "",
       name: "",
       description: "",
       price: 0,
-      durationDays: 30,
-      isTrial: false,
-      isActive: true,
+      duration_days: 30, // Snake case del backend
+      is_trial: false,
+      is_active: true,
       features: [],
-      displayOrder: plans.length + 1,
+      display_order: plans.length + 1,
     });
     setIsCreating(true);
     setShowEditModal(true);
   };
 
-  const handleDelete = (planId: string) => {
-    if (window.confirm("¿Estás seguro de eliminar este plan?")) {
-      const updatedPlans = plans.filter((p) => p.id !== planId);
-      setPlans(updatedPlans);
-      localStorage.setItem("mockPlans", JSON.stringify(updatedPlans));
+  const handleDelete = async (planId: number | undefined) => {
+    if (!planId) return;
+    
+    if (window.confirm("¿Estás seguro de eliminar este plan permanentemente?")) {
+      try {
+        await plansAPI.delete(planId);
+        // Recargamos la lista para ver los cambios
+        await loadPlans();
+      } catch (error) {
+        console.error("Error eliminando plan:", error);
+        alert("No se pudo eliminar el plan.");
+      }
     }
   };
 
-  const handleToggleActive = (planId: string) => {
-    const updatedPlans = plans.map((p) =>
-      p.id === planId ? { ...p, isActive: !p.isActive } : p
-    );
-    setPlans(updatedPlans);
-    localStorage.setItem("mockPlans", JSON.stringify(updatedPlans));
+  const handleToggleActive = async (plan: Plan) => {
+    if (!plan.id) return;
+    
+    try {
+        // Enviamos la actualización al backend
+        const updatedPlan = { ...plan, is_active: !plan.is_active };
+        await plansAPI.update(plan.id, updatedPlan);
+        
+        // Actualizamos estado local rápido
+        setPlans(plans.map(p => p.id === plan.id ? updatedPlan : p));
+    } catch (error) {
+        console.error("Error actualizando estado:", error);
+        alert("Error al cambiar estado del plan");
+    }
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedPlan) return;
 
-    let updatedPlans;
-    if (isCreating) {
-      updatedPlans = [...plans, selectedPlan];
-    } else {
-      updatedPlans = plans.map((p) =>
-        p.id === selectedPlan.id ? selectedPlan : p
-      );
+    try {
+      if (isCreating) {
+        await plansAPI.create(selectedPlan);
+      } else {
+        if (selectedPlan.id) {
+          await plansAPI.update(selectedPlan.id, selectedPlan);
+        }
+      }
+      
+      // Cerramos modal y recargamos
+      setShowEditModal(false);
+      setSelectedPlan(null);
+      await loadPlans();
+      
+    } catch (error) {
+      console.error("Error guardando plan:", error);
+      alert("Error al guardar. Verifica que el código no esté duplicado.");
     }
-
-    setPlans(updatedPlans);
-    localStorage.setItem("mockPlans", JSON.stringify(updatedPlans));
-    setShowEditModal(false);
-    setSelectedPlan(null);
   };
 
+  // --- Helpers para las características (Features) ---
+  
   const addFeature = () => {
     if (selectedPlan) {
       setSelectedPlan({
@@ -148,94 +156,98 @@ export const AdminPlansView: React.FC = () => {
         </button>
       </div>
 
-      {/* Plans Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {plans.map((plan) => (
-          <div
-            key={plan.id}
-            className={`bg-white rounded-lg shadow-sm border-2 p-6 ${
-              plan.isActive ? "border-indigo-200" : "border-gray-200 opacity-60"
-            }`}
-          >
-            {/* Plan Header */}
-            <div className="flex justify-between items-start mb-4">
-              <div>
-                <h3 className="text-xl font-bold text-gray-900">{plan.name}</h3>
-                <span
-                  className={`inline-block mt-1 px-2 py-1 text-xs font-semibold rounded ${
-                    plan.isTrial
-                      ? "bg-yellow-100 text-yellow-800"
-                      : "bg-blue-100 text-blue-800"
-                  }`}
-                >
-                  {plan.code}
-                </span>
-              </div>
-              <button
-                onClick={() => handleToggleActive(plan.id)}
-                className={`px-3 py-1 text-xs font-semibold rounded-full ${
-                  plan.isActive
-                    ? "bg-green-100 text-green-800"
-                    : "bg-gray-100 text-gray-800"
+      {isLoading ? (
+          <div className="text-center py-10">Cargando planes...</div>
+      ) : (
+        /* Plans Grid */
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {plans.map((plan) => (
+            <div
+                key={plan.id}
+                className={`bg-white rounded-lg shadow-sm border-2 p-6 ${
+                plan.is_active ? "border-indigo-200" : "border-gray-200 opacity-60"
                 }`}
-                title={plan.isActive ? "Activo" : "Inactivo"}
-              >
-                {plan.isActive ? "Activo" : "Inactivo"}
-              </button>
-            </div>
+            >
+                {/* Plan Header */}
+                <div className="flex justify-between items-start mb-4">
+                <div>
+                    <h3 className="text-xl font-bold text-gray-900">{plan.name}</h3>
+                    <span
+                    className={`inline-block mt-1 px-2 py-1 text-xs font-semibold rounded ${
+                        plan.is_trial
+                        ? "bg-yellow-100 text-yellow-800"
+                        : "bg-blue-100 text-blue-800"
+                    }`}
+                    >
+                    {plan.code}
+                    </span>
+                </div>
+                <button
+                    onClick={() => handleToggleActive(plan)}
+                    className={`px-3 py-1 text-xs font-semibold rounded-full ${
+                    plan.is_active
+                        ? "bg-green-100 text-green-800"
+                        : "bg-gray-100 text-gray-800"
+                    }`}
+                    title={plan.is_active ? "Activo" : "Inactivo"}
+                >
+                    {plan.is_active ? "Activo" : "Inactivo"}
+                </button>
+                </div>
 
-            {/* Price */}
-            <div className="mb-4">
-              <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-bold text-gray-900">
-                  S/ {plan.price.toFixed(2)}
-                </span>
-                <span className="text-gray-600">
-                  / {plan.durationDays} días
-                </span>
-              </div>
-              <p className="text-sm text-gray-600 mt-2">{plan.description}</p>
-            </div>
+                {/* Price */}
+                <div className="mb-4">
+                <div className="flex items-baseline gap-2">
+                    <span className="text-3xl font-bold text-gray-900">
+                    S/ {plan.price.toFixed(2)}
+                    </span>
+                    <span className="text-gray-600">
+                    / {plan.duration_days} días
+                    </span>
+                </div>
+                <p className="text-sm text-gray-600 mt-2">{plan.description}</p>
+                </div>
 
-            {/* Features */}
-            <div className="mb-6">
-              <h4 className="text-sm font-semibold text-gray-700 mb-2">
-                Características:
-              </h4>
-              <ul className="space-y-2">
-                {plan.features.map((feature, idx) => (
-                  <li key={idx} className="flex items-start gap-2 text-sm text-gray-600">
-                    <span className="text-indigo-600 mt-1">✓</span>
-                    <span>{feature}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+                {/* Features */}
+                <div className="mb-6">
+                <h4 className="text-sm font-semibold text-gray-700 mb-2">
+                    Características:
+                </h4>
+                <ul className="space-y-2">
+                    {plan.features.map((feature, idx) => (
+                    <li key={idx} className="flex items-start gap-2 text-sm text-gray-600">
+                        <span className="text-indigo-600 mt-1">✓</span>
+                        <span>{feature}</span>
+                    </li>
+                    ))}
+                </ul>
+                </div>
 
-            {/* Actions */}
-            <div className="flex gap-2 pt-4 border-t border-gray-200">
-              <button
-                onClick={() => handleEdit(plan)}
-                className="flex-1 px-3 py-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 flex items-center justify-center gap-2"
-                title="Editar plan"
-              >
-                <Edit2 className="w-4 h-4" />
-                Editar
-              </button>
-              <button
-                onClick={() => handleDelete(plan.id)}
-                className="flex-1 px-3 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 flex items-center justify-center gap-2"
-                title="Eliminar plan"
-              >
-                <Trash2 className="w-4 h-4" />
-                Eliminar
-              </button>
+                {/* Actions */}
+                <div className="flex gap-2 pt-4 border-t border-gray-200">
+                <button
+                    onClick={() => handleEdit(plan)}
+                    className="flex-1 px-3 py-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 flex items-center justify-center gap-2"
+                    title="Editar plan"
+                >
+                    <Edit2 className="w-4 h-4" />
+                    Editar
+                </button>
+                <button
+                    onClick={() => handleDelete(plan.id)}
+                    className="flex-1 px-3 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 flex items-center justify-center gap-2"
+                    title="Eliminar plan"
+                >
+                    <Trash2 className="w-4 h-4" />
+                    Eliminar
+                </button>
+                </div>
             </div>
-          </div>
-        ))}
-      </div>
+            ))}
+        </div>
+      )}
 
-      {plans.length === 0 && (
+      {plans.length === 0 && !isLoading && (
         <div className="text-center py-12">
           <CreditCard className="mx-auto h-12 w-12 text-gray-400" />
           <h3 className="mt-2 text-sm font-medium text-gray-900">
@@ -328,9 +340,9 @@ export const AdminPlansView: React.FC = () => {
                   </label>
                   <input
                     type="number"
-                    value={selectedPlan.durationDays}
+                    value={selectedPlan.duration_days} // OJO: Snake case aquí también
                     onChange={(e) =>
-                      setSelectedPlan({ ...selectedPlan, durationDays: parseInt(e.target.value) })
+                      setSelectedPlan({ ...selectedPlan, duration_days: parseInt(e.target.value) })
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
                     required
@@ -343,9 +355,9 @@ export const AdminPlansView: React.FC = () => {
                 <label className="flex items-center gap-2">
                   <input
                     type="checkbox"
-                    checked={selectedPlan.isTrial}
+                    checked={selectedPlan.is_trial}
                     onChange={(e) =>
-                      setSelectedPlan({ ...selectedPlan, isTrial: e.target.checked })
+                      setSelectedPlan({ ...selectedPlan, is_trial: e.target.checked })
                     }
                     className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
                   />
@@ -354,9 +366,9 @@ export const AdminPlansView: React.FC = () => {
                 <label className="flex items-center gap-2">
                   <input
                     type="checkbox"
-                    checked={selectedPlan.isActive}
+                    checked={selectedPlan.is_active}
                     onChange={(e) =>
-                      setSelectedPlan({ ...selectedPlan, isActive: e.target.checked })
+                      setSelectedPlan({ ...selectedPlan, is_active: e.target.checked })
                     }
                     className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
                   />
