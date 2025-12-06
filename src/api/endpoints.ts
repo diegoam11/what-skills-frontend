@@ -216,7 +216,9 @@ export const skillsAPI = {
 // Jobs API
 export const jobsAPI = {
   ingest: (data: JobIngestRequest): Promise<JobIngestResponse> => 
-    apiClient.post('/jobs/ingest', data).then(res => res.data),
+    apiClient
+      .post('/jobs/ingest', data, { timeout: 60000 }) // 60s
+      .then(res => res.data),
 };
 
 // --- PLANS API ---

@@ -37,7 +37,7 @@ export const useAdminJobsLogic = () => {
       });
       setResult(response);
       // Limpiamos el texto grande para dejar listo para la siguiente
-      setFormData(prev => ({ ...prev, rawText: "" }));
+      setFormData(prev => ({ ...prev, rawText: "", url: "" }));
     } catch (err: any) {
       console.error(err);
       setError("Error al procesar la oferta. Verifica que el backend esté activo.");
