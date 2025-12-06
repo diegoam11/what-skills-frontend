@@ -9,16 +9,22 @@ interface AddSkillFormProps {
   onSkillAdd: (skill: { name: string; proficiency: SkillProficiency }) => void;
   onClose: () => void;
   category: SkillCategory;
+  
+  //Para editar
+  initialName?: string;
+  initialProficiency?: SkillProficiency;
 }
 
 export const AddSkillForm: React.FC<AddSkillFormProps> = ({
   onSkillAdd,
   onClose,
   category,
+  initialName = "",
+  initialProficiency = "",
 }) => {
   // 3. Estado tipado: Puede ser un nivel válido O vacío al inicio
-  const [proficiency, setProficiency] = useState<SkillProficiency | "">("");
-  const [skillName, setSkillName] = useState("");
+  const [proficiency, setProficiency] = useState<SkillProficiency | "">(initialProficiency);
+  const [skillName, setSkillName] = useState(initialName);
   const [error, setError] = useState("");
 
   const availableSkills =
@@ -52,8 +58,7 @@ export const AddSkillForm: React.FC<AddSkillFormProps> = ({
           setSkillName(value);
           if (error) setError("");
         }}
-        placeholder={`Ej: ${category === "Técnicas" ? "Python" : "Liderazgo"
-          }...`}
+        placeholder={initialName ? initialName : `Ej: ${category === "Técnicas" ? "Python" : "Liderazgo"}...`}
       />
 
       <Select
@@ -82,7 +87,7 @@ export const AddSkillForm: React.FC<AddSkillFormProps> = ({
           type="submit"
           className="px-4 py-2 bg-[#0FBB82] text-white font-semibold rounded-xl hover:bg-[#0FAE7D] transition-colors shadow-sm cursor-pointer"
         >
-          Añadir
+          {initialName ? "Actualizar" : "Añadir"}
         </button>
       </div>
     </form>

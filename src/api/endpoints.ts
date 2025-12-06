@@ -1,6 +1,6 @@
 import { apiClient } from './base';
 import type { User } from '../types/domain/User';
-import type { Skill } from '../types/domain/Skill';
+import type { Skill, SkillCategoryBackend } from '../types/domain/Skill';
 
 
 export interface LoginRequest {
@@ -14,11 +14,26 @@ export interface RegisterRequest {
   email: string;
   password: string;
   career: string;
-  university: string;
-  semester: number;
-  job: string;         
-  jobLabel?: string;   
+  job: string;
+  university?: string;
+  semester?: number;
+  jobLabel?: string;
   careerLabel?: string;
+}
+
+export interface RegisterBackendPayload {
+  email: string;
+  password: string;
+  full_name: string;
+  career_target: string;
+  job_target: string;
+}
+
+export interface UserUpdateRequest {
+  full_name?: string;
+  job_target?: string;
+  career_target?: string;
+  academic_level?: string;
 }
 
 export interface AuthResponse {
@@ -74,41 +89,88 @@ export interface Recommendation {
   created_at: string;
 }
 
+export interface SkillAddRequest {
+  name: string;
+  proficiency: string;
+  category: SkillCategoryBackend;
+}
+
+export interface GapItem {
+  name: string;
+  level_required: string;
+  frequency: number;
+  reason: string;
+}
+
+export interface SkillMatch {
+  name: string;
+  level: string;
+}
+
+export interface EmployabilityReport {
+  score: number;
+  market_fit: string;
+  analyzed_jobs: number;
+  top_missing_skills: GapItem[];
+  top_present_skills: SkillMatch[];
+  analyzed_job_titles: string[];
+}
+
+export interface JobIngestRequest {
+  raw_text: string;
+  url?: string;
+  source?: string;
+}
+
+export interface JobIngestResponse {
+  id: string;
+  title: string;
+  skills_found: number;
+  message: string;
+}
+
 // Authentication API
 export const authAPI = {
   login: (data: LoginRequest): Promise<AuthResponse> =>
     apiClient.post('/auth/login', data).then(res => res.data),
-  
-  register: (data: RegisterRequest): Promise<User> =>
+
+  register: (data: RegisterBackendPayload): Promise<User> =>
     apiClient.post('/auth/register', data).then(res => res.data),
-  
+
   getCurrentUser: (): Promise<User> =>
     apiClient.get('/auth/me').then(res => res.data),
+
+  updateProfile: (data: UserUpdateRequest): Promise<User> =>
+    apiClient.put('/auth/me', data).then(res => res.data),
 };
 
 // Employability API
 export const employabilityAPI = {
+
+  getAnalysis: (): Promise<EmployabilityReport> => 
+    apiClient.get('/employability/analyze').then(res => res.data),
+  /*
   getScore: (): Promise<EmployabilityScore> =>
     apiClient.get('/employability/score').then(res => res.data),
-  
+
   getData: (): Promise<EmployabilityData> =>
     apiClient.get('/employability/data').then(res => res.data),
-  
+
   updateData: (data: EmployabilityData): Promise<EmployabilityScore> =>
     apiClient.post('/employability/data', data).then(res => res.data),
-  
+
   getHistory: (): Promise<EmployabilityScore[]> =>
     apiClient.get('/employability/history').then(res => res.data),
-  
+
   getRecommendations: (): Promise<Recommendation[]> =>
-    apiClient.get('/employability/recommendations').then(res => res.data),
+    apiClient.get('/employability/recommendations').then(res => res.data),*/
 };
 
 // Reports API
 export const reportsAPI = {
   getUniversityReport: (universityName: string): Promise<any> =>
     apiClient.get(`/reports/university/${universityName}`).then(res => res.data),
-  
+
   getAnalyticsOverview: (): Promise<any> =>
     apiClient.get('/reports/analytics/overview').then(res => res.data),
 };
@@ -117,7 +179,29 @@ export const reportsAPI = {
 export const usersAPI = {
   getAllUsers: (): Promise<User[]> =>
     apiClient.get('/users/').then(res => res.data),
-  
+
   getUserById: (userId: string): Promise<User> =>
     apiClient.get(`/users/${userId}`).then(res => res.data),
+};
+
+
+// Skills API
+export const skillsAPI = {
+  // Obtener habilidades del usuario (GET /api/v1/skills/me)
+  getMySkills: (): Promise<SkillAddRequest[]> => 
+    apiClient.get('/skills/me').then(res => res.data),
+
+  // Agregar una habilidad (POST /api/v1/skills/me)
+  addSkill: (data: SkillAddRequest): Promise<SkillAddRequest> => 
+    apiClient.post('/skills/me', data).then(res => res.data),
+   
+  //Borrar skill por nombre
+  deleteSkill: (skillName: string): Promise<void> => 
+    apiClient.delete(`/skills/me/${encodeURIComponent(skillName)}`).then(res => res.data),
+};
+
+// Jobs API
+export const jobsAPI = {
+  ingest: (data: JobIngestRequest): Promise<JobIngestResponse> => 
+    apiClient.post('/jobs/ingest', data).then(res => res.data),
 };

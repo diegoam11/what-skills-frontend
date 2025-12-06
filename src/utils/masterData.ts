@@ -58,3 +58,11 @@ export const proficiencyLevels = [
   { value: "Intermedio", label: "Intermedio" },
   { value: "Avanzado", label: "Avanzado" },
 ];
+
+export const academicLevels = [
+  { value: "estudiante", label: "Estudiante" },
+  { value: "egresado", label: "Egresado / Bachiller" },
+  { value: "titulado", label: "Titulado" },
+  { value: "maestria", label: "Maestría" },
+  { value: "doctorado", label: "Doctorado" },
+];

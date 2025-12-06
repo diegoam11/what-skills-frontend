@@ -1,10 +1,14 @@
-export type SkillCategory = 'Técnicas' | 'Blandas' | 'herramienta' | 'lenguaje' | 'framework' | 'blanda';
+export type SkillCategoryBackend = 'técnica' | 'blanda'; 
+
+// Para la UI, seguimos usando Plural/Capitalizado si prefieres
+export type SkillCategoryVisual = 'Técnicas' | 'Blandas';
+
 export type SkillProficiency = 'Básico' | 'Intermedio' | 'Avanzado';
 
 export interface Skill {
-  id: string;
+  id: string; // Puede ser UUID o string temporal
   name: string;
-  category: SkillCategory;
-  proficiency: SkillProficiency; // 'Básico', 'Intermedio', 'Avanzado', etc.
-  verified?: boolean; // Preparado para el futuro
+  category: SkillCategoryBackend; // Lo que viene de la API
+  proficiency: SkillProficiency;
+  verified?: boolean;
 }

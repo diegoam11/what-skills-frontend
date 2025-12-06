@@ -1,6 +1,6 @@
 import type { IAuthService } from "./IAuthService";
 import type { User } from "../types/domain/User";
-import type { LoginRequest, RegisterRequest } from "../api/endpoints";
+import type { LoginRequest, RegisterRequest, UserUpdateRequest } from "../api/endpoints";
 
 interface MockDatabaseUser extends User {
   password: string; // Campo extra solo para la DB interna
@@ -147,6 +147,21 @@ class MockAuthService implements IAuthService { // <--- CLAVE: implements
     return await this.login({ email: data.email, password: data.password });
   }
 
+
+  async updateProfile(data: UserUpdateRequest): Promise<User> {
+    const currentUser = this.getCurrentUser();
+    if (!currentUser) throw new Error("No user logged in");
+
+    // Simulamos la actualización
+    const updatedUser = { ...currentUser, ...data };
+
+    // Guardamos en localStorage mock
+    localStorage.setItem(this.userKey, JSON.stringify(updatedUser));
+
+    return updatedUser;
+  }
+
+  
   // Logout
   logout(): void {
     localStorage.removeItem(this.tokenKey);

@@ -1,93 +1,79 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { authService } from "../../services/auth";
-import { careers, jobs } from "../../utils/masterData";
+import { careers as careersList, jobs as jobsList } from "../../utils/masterData";
+import type { RegisterRequest } from "../../api/endpoints";
 
-export const RegisterLogic = () => {
+export const useRegisterLogic = () => {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [career, setCareer] = useState("");
-  const [job, setJob] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  
+  // 1. Estado Limpio (Sin universidad ni semestre)
+  const [formData, setFormData] = useState<RegisterRequest>({
+    first_name: '',
+    last_name: '',
+    email: '',
+    password: '',
+    career: '',
+    job: '',
+    // Inicializamos como undefined o vacíos si TS se queja, 
+    // pero al ser opcionales en la interfaz, podemos omitirlos aquí.
+  });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  // Manejo especial para los Selects (si usas componentes custom)
+  const handleSelectChange = (name: string, value: string, label?: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [name]: value,
+      [`${name}Label`]: label // Guardamos el label por si acaso (visual)
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
-
-    // Validaciones
-    if (!email || !password || !confirmPassword || !career || !job) {
-      setError("Por favor, completa todos los campos");
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      setError("Las contraseñas no coinciden");
-      return;
-    }
-
-    if (password.length < 6) {
-      setError("La contraseña debe tener al menos 6 caracteres");
-      return;
-    }
-
-    setLoading(true);
+    setError(null);
+    setIsLoading(true);
 
     try {
-      // Registrar usuario con el servicio simulado
-      const careerLabel = careers.find(c => c.value === career)?.label || career;
-      const jobLabel = jobs.find(j => j.value === job)?.label || job;
+      // 2. Validación básica
+      if (!formData.email || !formData.password || !formData.first_name) {
+        throw new Error("Por favor completa los campos obligatorios.");
+      }
 
-      await authService.register({
-        email, 
-        password, 
-        career, 
-        job,
-        careerLabel, // label (ej. "Ingeniería de Sistemas")
-        jobLabel,
-
-        // Campos obligatorios en RegisterRequest que no pedimos en el form visual:
-        first_name: email.split("@")[0], // Usamos la parte local del correo como nombre temporal
-        last_name: "",
-        university: "No especificada",
-        semester: 1,
-      });
-
-      console.log("Usuario registrado exitosamente");
-
-      // Redirigir al dashboard
-      navigate("/dashboard");
-
-      // Recargar la página para actualizar el estado de autenticación
-      window.location.reload();
+      // 3. Llamada al Servicio (El adaptador se encarga del resto)
+      await authService.register(formData);
+      
+      // 4. Redirección al éxito
+      navigate('/dashboard'); 
+      
     } catch (err: any) {
       console.error("Error en registro:", err);
-      setError(
-        err.message || "Error al registrar usuario. Intenta nuevamente."
-      );
+      // Intentamos mostrar el mensaje que viene del backend (ej. "Email ya registrado")
+      const message = err.response?.data?.detail || err.message || "Error al registrarse";
+      setError(message);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   return {
-    email,
-    setEmail,
-    password,
-    setPassword,
-    confirmPassword,
-    setConfirmPassword,
-    career,
-    setCareer,
-    job,
-    setJob,
-    careers,
-    jobs,
-    loading,
+    formData,
     error,
+    isLoading,
+    handleChange,
+    handleSelectChange,
     handleSubmit,
+    // Agregamos las listas para que la Vista las pueda usar
+    careers: careersList || [], 
+    jobs: jobsList || []
   };
 };
