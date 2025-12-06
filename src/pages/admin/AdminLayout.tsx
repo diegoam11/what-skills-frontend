@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Users, CreditCard, LogOut } from "lucide-react";
+import { Users, CreditCard, LogOut, Briefcase } from "lucide-react";
 import { mockAuthService } from "../../services/mockAuthService";
 
 export const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -22,22 +22,32 @@ export const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children 
               <div className="flex gap-4">
                 <Link
                   to="/admin/users"
-                  className={`px-4 py-2 rounded-lg font-medium flex items-center gap-2 ${
-                    location.pathname === "/admin/users"
+                  className={`px-4 py-2 rounded-lg font-medium flex items-center gap-2 ${location.pathname === "/admin/users"
                       ? "text-indigo-600 bg-indigo-50"
                       : "text-gray-600 hover:bg-gray-50"
-                  }`}
+                    }`}
                 >
                   <Users className="w-4 h-4" />
                   Usuarios
                 </Link>
+
                 <Link
-                  to="/admin/plans"
-                  className={`px-4 py-2 rounded-lg font-medium flex items-center gap-2 ${
-                    location.pathname === "/admin/plans"
+                  to="/admin/jobs"
+                  className={`px-4 py-2 rounded-lg font-medium flex items-center gap-2 ${location.pathname === "/admin/jobs"
                       ? "text-indigo-600 bg-indigo-50"
                       : "text-gray-600 hover:bg-gray-50"
-                  }`}
+                    }`}
+                >
+                  <Briefcase className="w-4 h-4" />
+                  Ofertas
+                </Link>
+
+                <Link
+                  to="/admin/plans"
+                  className={`px-4 py-2 rounded-lg font-medium flex items-center gap-2 ${location.pathname === "/admin/plans"
+                      ? "text-indigo-600 bg-indigo-50"
+                      : "text-gray-600 hover:bg-gray-50"
+                    }`}
                 >
                   <CreditCard className="w-4 h-4" />
                   Planes

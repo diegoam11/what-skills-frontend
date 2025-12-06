@@ -1,27 +1,23 @@
 import { useState, useRef } from "react";
 import { useSkillsLogic } from "./SkillsLogic";
-import type { Skill, SkillCategory, SkillProficiency } from "../../types/domain/Skill";
-import { Plus, Trash2, UploadCloud } from "lucide-react";
+import type { Skill, SkillCategoryVisual, SkillProficiency } from "../../types/domain/Skill";
+import { Plus, Trash2, UploadCloud, Edit2 } from "lucide-react"; // <--- Importamos Edit2
 import { Modal } from "../../components/Modal";
 import { AddSkillForm } from "../../components/AddSkillForm";
 import { Spinner } from "../../components/Spinner";
 
-type VisualCategory = 'Técnicas' | 'Blandas';
-
+// Función auxiliar para agrupar
 const groupSkillsByCategory = (
   skills: Skill[]
-): Record<VisualCategory, Skill[]> => {
-  const grouped: Record<VisualCategory, Skill[]> = {
-    Técnicas: [],
-    Blandas: [],
+): Record<SkillCategoryVisual, Skill[]> => {
+  const grouped: Record<SkillCategoryVisual, Skill[]> = {
+    "Técnicas": [],
+    "Blandas": [],
   };
 
   skills.forEach((skill) => {
-    if (
-      ["lenguaje", "framework", "herramienta"].includes(
-        skill.category.toLowerCase()
-      )
-    ) {
+    const cat = skill.category.toLowerCase();
+    if (cat === "técnica" || cat === "herramienta" || cat === "lenguaje" || cat === "framework") {
       grouped["Técnicas"].push(skill);
     } else {
       grouped["Blandas"].push(skill);
@@ -39,11 +35,14 @@ export const SkillsView: React.FC = () => {
     isExtracting,
     handleAddSkillsFromCV,
   } = useSkillsLogic();
+  
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [categoryForNewSkill, setCategoryForNewSkill] =
-    useState<SkillCategory | null>(null);
+  const [categoryForNewSkill, setCategoryForNewSkill] = useState<SkillCategoryVisual | null>(null);
+  
+  // NUEVO ESTADO: Para saber qué skill estamos editando
+  const [editingSkill, setEditingSkill] = useState<Skill | null>(null);
+  
   const [formKey, setFormKey] = useState(Date.now());
-
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleUploadClick = () => {
@@ -54,6 +53,7 @@ export const SkillsView: React.FC = () => {
     const file = event.target.files?.[0];
     if (file) {
       handleAddSkillsFromCV(file);
+      event.target.value = ""; 
     }
   };
 
@@ -67,23 +67,36 @@ export const SkillsView: React.FC = () => {
 
   const groupedSkills = groupSkillsByCategory(skills);
 
-  const handleOpenModal = (category: SkillCategory) => {
+  // Abrir modal para NUEVA skill
+  const handleOpenModal = (category: SkillCategoryVisual) => {
+    setEditingSkill(null); // Aseguramos que no estamos editando
     setFormKey(Date.now());
     setCategoryForNewSkill(category);
+    setIsModalOpen(true);
+  };
+
+  // Abrir modal para EDITAR skill (NUEVA FUNCIÓN)
+  const handleEditClick = (skill: Skill, category: SkillCategoryVisual) => {
+    setEditingSkill(skill); // Guardamos la skill a editar
+    setCategoryForNewSkill(category);
+    setFormKey(Date.now()); // Forzamos recarga del form
     setIsModalOpen(true);
   };
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setCategoryForNewSkill(null);
+    setEditingSkill(null); // Limpiamos estado de edición
   };
 
-  const handleAddNewSkill = (newSkill: {
+  const handleFormSubmit = (skillData: {
     name: string;
     proficiency: SkillProficiency;
   }) => {
     if (categoryForNewSkill) {
-      handleAddSkill(newSkill, categoryForNewSkill);
+      // Tu lógica handleAddSkill ya maneja actualizaciones en el backend
+      // así que sirve tanto para crear como para editar.
+      handleAddSkill(skillData, categoryForNewSkill);
       handleCloseModal();
     }
   };
@@ -101,11 +114,11 @@ export const SkillsView: React.FC = () => {
               accept=".pdf"
               ref={fileInputRef}
               onChange={handleFileChange}
-              style={{ display: "none" }} // Ocultamos el input feo
+              style={{ display: "none" }}
             />
             <button
               onClick={handleUploadClick}
-              disabled={isExtracting} // Deshabilitar mientras procesa
+              disabled={isExtracting}
               className="flex items-center gap-2 px-4 py-2 text-sm bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 transition cursor-pointer disabled:bg-indigo-300 disabled:cursor-not-allowed"
             >
               {isExtracting ? (
@@ -123,7 +136,7 @@ export const SkillsView: React.FC = () => {
           </div>
         </div>
 
-        {(Object.keys(groupedSkills) as VisualCategory[]).map((category) => (
+        {(Object.keys(groupedSkills) as SkillCategoryVisual[]).map((category) => (
           <div key={category} className="bg-white p-6 rounded-2xl shadow-sm">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold capitalize">{category}</h2>
@@ -135,23 +148,44 @@ export const SkillsView: React.FC = () => {
                 Añadir
               </button>
             </div>
+            
             <div className="flex flex-wrap gap-3">
-              {groupedSkills[category].map((skill) => (
-                <div
-                  key={skill.id}
-                  className="bg-sky-100 text-sky-800 text-sm font-medium px-3 py-1.5 rounded-full flex items-center gap-2"
-                >
-                  <span>
-                    {skill.name} ({skill.proficiency})
-                  </span>
-                  <button
-                    onClick={() => handleDeleteSkill(skill.id)}
-                    className="text-sky-500 hover:text-red-500 transition-colors cursor-pointer"
+              {groupedSkills[category].length > 0 ? (
+                groupedSkills[category].map((skill) => (
+                  <div
+                    key={skill.id}
+                    className={`text-sm font-medium px-3 py-1.5 rounded-full flex items-center gap-2 ${
+                      category === "Técnicas" 
+                        ? "bg-sky-100 text-sky-800" 
+                        : "bg-purple-100 text-purple-800"
+                    }`}
                   >
-                    <Trash2 size={14} />
-                  </button>
-                </div>
-              ))}
+                    <span>
+                      {skill.name} <span className="opacity-70 text-xs">({skill.proficiency})</span>
+                    </span>
+                    
+                    {/* BOTÓN EDITAR */}
+                    <button
+                      onClick={() => handleEditClick(skill, category)}
+                      className="hover:text-indigo-600 transition-colors cursor-pointer ml-2"
+                      title="Editar nivel"
+                    >
+                      <Edit2 size={14} />
+                    </button>
+
+                    {/* BOTÓN ELIMINAR */}
+                    <button
+                      onClick={() => handleDeleteSkill(skill.name)} 
+                      className="hover:text-red-600 transition-colors cursor-pointer ml-1"
+                      title="Eliminar habilidad"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-gray-400 italic">No tienes habilidades {category.toLowerCase()} registradas.</p>
+              )}
             </div>
           </div>
         ))}
@@ -160,16 +194,18 @@ export const SkillsView: React.FC = () => {
       <Modal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
-        title={`Habilidades ${categoryForNewSkill || ""}`}
+        // Cambiamos el título dinámicamente
+        title={`${editingSkill ? "Editar" : "Añadir"} Habilidad (${categoryForNewSkill})`}
       >
-        {/* Aseguramos que el formulario no se renderice si no hay categoría */}
         {categoryForNewSkill && (
           <AddSkillForm
             key={formKey}
             onClose={handleCloseModal}
-            onSkillAdd={handleAddNewSkill}
-            // CAMBIO: Pasamos la categoría seleccionada al formulario
+            onSkillAdd={handleFormSubmit}
             category={categoryForNewSkill}
+            // Pasamos los datos iniciales si estamos editando
+            initialName={editingSkill?.name}
+            initialProficiency={editingSkill?.proficiency}
           />
         )}
       </Modal>

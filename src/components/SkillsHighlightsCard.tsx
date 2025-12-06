@@ -6,7 +6,7 @@ export const SkillsHighlightsCard: React.FC<Props> = ({ skills }) => {
   return (
     <div className="bg-white rounded-2xl shadow-sm p-6 w-full">
       <h2 className="text-sm font-semibold text-gray-700 mb-4">
-        Habilidades destacadas
+        Tus Fortalezas
       </h2>
       <div className="flex flex-col gap-3">
         {skills.map((s, i) => (

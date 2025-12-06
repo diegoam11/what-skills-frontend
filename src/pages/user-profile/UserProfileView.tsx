@@ -1,112 +1,124 @@
 import React from "react";
-import { UserProfileLogic } from "./UserProfileLogic";
-import { InputText } from "../../components/InputText";
-import { InputNumber } from "../../components/InputNumber";
-import { Select } from "../../components/Select";
+import { useUserProfileLogic } from "./UserProfileLogic";
 import { SearchableSelect } from "../../components/SearchableSelect";
+import { Select } from "../../components/Select";
+import { Save } from "lucide-react";
 
 export const UserProfileView: React.FC = () => {
-  const {
-    firstName,
-    lastName,
-    university,
-    career,
-    graduationYear,
-    academicLevel,
-    desiredPosition,
-    industries,
-    setFirstName,
-    setLastName,
-    setUniversity,
-    setCareer,
-    setGraduationYear,
-    setAcademicLevel,
-    setDesiredPosition,
-    setIndustries,
-    universities,
-    careers,
-    academicLevels,
-    positions,
-    industryOptions,
-    handleSubmit,
-  } = UserProfileLogic();
+  const { 
+    formData, 
+    handleChange, 
+    handleSelectChange, 
+    handleSave, 
+    isLoading, 
+    message,
+    lists 
+  } = useUserProfileLogic();
 
   return (
-    <div className="h-full w-full flex items-center justify-center">
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white w-full max-w-3xl p-8 rounded-2xl shadow-lg space-y-8"
-      >
-        <section>
-          <h1 className="text-2xl font-semibold text-gray-800 mb-6">
-            Datos Personales y Académicos
-          </h1>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <InputText
-              label="Nombres"
-              value={firstName}
-              onChange={setFirstName}
-            />
-            <InputText
-              label="Apellidos"
-              value={lastName}
-              onChange={setLastName}
-            />
-            <SearchableSelect
-              label="Universidad / Instituto"
-              options={universities}
-              value={university}
-              onChange={setUniversity}
-            />
-            <SearchableSelect
-              label="Carrera o especialidad"
-              options={careers}
-              value={career}
-              onChange={setCareer}
-            />
-            <InputNumber
-              label="Año de egreso"
-              value={graduationYear}
-              onChange={setGraduationYear}
-            />
-            <Select
-              label="Nivel académico"
-              options={academicLevels}
-              value={academicLevel}
-              onChange={setAcademicLevel}
-            />
-          </div>
-        </section>
+    <div className="p-6 max-w-4xl mx-auto">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold text-gray-800">Mi Perfil</h1>
+      </div>
 
-        <section>
-          <h1 className="text-2xl font-semibold text-gray-800 mb-6">
-            Objetivos Profesionales
-          </h1>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <SearchableSelect
-              label="Puesto laboral que desea conseguir"
-              options={positions}
-              value={desiredPosition}
-              onChange={setDesiredPosition}
-            />
-            <SearchableSelect
-              label="Áreas o industrias de interés"
-              options={industryOptions}
-              onChange={setIndustries}
-              value={industries}
-            />
-          </div>
-        </section>
-
-        <div className="text-right">
-          <button
-            type="submit"
-            className="px-6 w-full py-2 bg-[#0FBB82] text-white font-semibold rounded-xl hover:bg-[#0FAE7D] transition-colors shadow-sm cursor-pointer"
-          >
-            Guardar
-          </button>
+      {/* Mensaje de Feedback (Éxito/Error) */}
+      {message && (
+        <div className={`p-4 mb-6 rounded-xl border ${
+          message.type === 'success' 
+            ? 'bg-green-50 border-green-200 text-green-700' 
+            : 'bg-red-50 border-red-200 text-red-700'
+        }`}>
+          {message.text}
         </div>
-      </form>
+      )}
+
+      <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 space-y-8">
+        
+        {/* Sección: Datos Personales */}
+        <section>
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">Datos Personales</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Nombres</label>
+                <input 
+                    name="firstName" 
+                    value={formData.firstName} 
+                    onChange={handleChange}
+                    className="w-full p-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#0FBB82] outline-none transition-all"
+                    placeholder="Tus nombres"
+                />
+                </div>
+                <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Apellidos</label>
+                <input 
+                    name="lastName" 
+                    value={formData.lastName} 
+                    onChange={handleChange}
+                    className="w-full p-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#0FBB82] outline-none transition-all"
+                    placeholder="Tus apellidos"
+                />
+                </div>
+                <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Email (No editable)</label>
+                    <input 
+                        value={formData.email} 
+                        disabled
+                        className="w-full p-2.5 border border-gray-200 bg-gray-50 rounded-xl text-gray-500 cursor-not-allowed"
+                    />
+                </div>
+            </div>
+        </section>
+
+        <hr className="border-gray-100" />
+
+        {/* Sección: Objetivos Profesionales */}
+        <section>
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">Objetivos Profesionales</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <SearchableSelect 
+                        label="Carrera o Especialidad"
+                        options={lists.careers} // Datos de masterData via Logic
+                        value={formData.career}
+                        // Adaptamos el evento del Select al formato del Logic
+                        onChange={(val) => handleSelectChange('career', val)}
+                        placeholder="Selecciona tu carrera..."
+                    />
+                </div>
+                <div>
+                    <SearchableSelect 
+                        label="Puesto Objetivo"
+                        options={lists.jobs} // Datos de masterData via Logic
+                        value={formData.job}
+                        onChange={(val) => handleSelectChange('job', val)}
+                        placeholder="Selecciona el puesto..."
+                    />
+                </div>
+                <div>
+                    <Select 
+                        label="Nivel Académico"
+                        options={lists.academicLevels}
+                        value={formData.academicLevel}
+                        onChange={(val) => handleSelectChange('academicLevel', val)}
+                        placeholder="Selecciona tu nivel..."
+                    />
+                </div>
+            </div>
+        </section>
+
+        {/* Botón de Guardado */}
+        <div className="flex justify-end pt-4">
+            <button 
+            onClick={handleSave}
+            disabled={isLoading}
+            className="flex items-center gap-2 bg-[#0FBB82] text-white px-6 py-2.5 rounded-xl font-semibold hover:bg-[#0FAE7D] transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm active:scale-95 transform"
+            >
+            <Save size={20} />
+            {isLoading ? "Guardando..." : "Guardar Cambios"}
+            </button>
+        </div>
+
+      </div>
     </div>
   );
 };

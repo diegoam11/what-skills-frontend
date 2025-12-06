@@ -1,4 +1,5 @@
 import type { Skill } from "./Skill";
+
 export type UserRole = 'admin' | 'user';
 
 export interface Subscription {
@@ -11,15 +12,21 @@ export interface Subscription {
 }
 
 export interface User {
+  // --- Campos Base (Coinciden con Backend) ---
   id: string;
   email: string;
-  displayName: string;
   role: UserRole;
-  career?: string; // ID o value
-  careerLabel?: string; // Nombre legible
-  job?: string; // ID o value
-  jobLabel?: string; // Nombre legible
-  currentSubscription: Subscription;
-  createdAt: string;
-  skills?: Skill[];
+  created_at?: string; // Python envía: created_at
+
+  // --- Datos de Perfil ---
+  full_name?: string;     // Python envía: full_name
+  job_target?: string;    // Python envía: job_target
+  career_target?: string;
+  academic_level?: string; // Python envía: career_target
+
+  // --- Relaciones ---
+  skills?: Skill[];       // A futuro: Lista de habilidades
+  
+  // Lo marcamos opcional (?) porque el backend aún no lo envía
+  currentSubscription?: Subscription; 
 }

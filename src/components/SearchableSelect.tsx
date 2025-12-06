@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { X } from "lucide-react"; // CAMBIO: Importamos el ícono X
+import { X } from "lucide-react";
 
 interface Option {
   value: string;
@@ -10,8 +10,10 @@ interface SearchableSelectProps {
   label: string;
   options: Option[];
   value: string;
-  onChange: (value: string) => void;
+  // La interfaz ya está bien: acepta el segundo argumento opcional
+  onChange: (value: string, label?: string) => void;
   placeholder?: string;
+  className?: string;
 }
 
 export const SearchableSelect: React.FC<SearchableSelectProps> = ({
@@ -19,7 +21,8 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
   options,
   value,
   onChange,
-  placeholder,
+  placeholder = "Seleccionar...",
+  className = "",
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isOpen, setIsOpen] = useState(false);
@@ -59,7 +62,6 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
       <div className="relative">
         <input
           type="text"
-          // CAMBIO: Añadido padding a la derecha (pr-10) para hacer espacio al ícono
           className="w-full p-2.5 pr-10 border border-gray-300 rounded-xl outline-none transition-all shadow-sm focus:border-[#0FBB82] focus:ring-2 focus:ring-green-200"
           placeholder={placeholder || "Escribe o selecciona..."}
           value={isOpen ? searchTerm : selectedOption?.label || ""}
@@ -67,11 +69,9 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
           onFocus={() => setIsOpen(true)}
         />
 
-        {/* CAMBIO: Botón para limpiar la selección */}
-        {/* Aparece solo si hay un valor y el menú está cerrado */}
         {value && !isOpen && (
           <button
-            type="button" // Previene que el botón envíe un formulario
+            type="button"
             onClick={() => onChange("")}
             className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
             aria-label="Limpiar selección"
@@ -86,11 +86,13 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
               filteredOptions.map((opt) => (
                 <div
                   key={opt.value}
+                  // --- AQUÍ ESTABA EL DETALLE ---
                   onClick={() => {
-                    onChange(opt.value);
+                    // Pasamos el VALUE y también el LABEL
+                    onChange(opt.value, opt.label); 
                     setIsOpen(false);
                   }}
-                  // CAMBIO: Reemplazado cn por template literal para no asumir dependencias
+                  // -----------------------------
                   className={`px-4 py-2 m-1 cursor-pointer rounded-lg transition-colors ${
                     value === opt.value
                       ? "bg-green-100 text-green-900 font-medium"
